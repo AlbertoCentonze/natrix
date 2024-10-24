@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Callable, List
 
+from natrix.ast_tools import VyperASTVisitor
+
 
 @dataclass()
 class Rule:
@@ -8,6 +10,7 @@ class Rule:
     description: str
     run: Callable
     # TODO add an id to ignore the rule
+
 
 @dataclass()
 class Issue:
@@ -17,52 +20,29 @@ class Issue:
     code: str
     message: str
 
-class BaseRule:
+
+class BaseRule(VyperASTVisitor):
     def __init__(self, severity: str, code: str, message: str):
         self.results = []
         self.severity = severity
         self.code = code
         self.message = message
+        self.issues = []
 
-    def run(self, ast) -> List[Issue]:
-        self.visit(ast)
-        self.path = ast.module_node.resolved_path
-        # print(help(ast.module_node))
+    def run(self, compiler_output) -> List[Issue]:
+        self.compiler_output = compiler_output
+        self.visit(compiler_output["ast"])
+        return self.issues
 
-        issues = []
-
-        for raw_issue in self.results:
-            line, character, message_args = raw_issue
-
-            issues.append(
-                Issue(
-                    file=self.path,
-                    position="{}:{}".format(line, character),
-                    severity=self.severity,
-                    code=self.code,
-                    message=self.message.format(*message_args),
-                )
-            )
-
-        return issues
-
-    def visit(self, node, **kwargs):
-        for c in node.get_children():
-            self.visit(c)
-
-        for class_ in node.__class__.mro():
-            ast_type = class_.__name__
-
-            visitor_fn = getattr(self, f"visit_{ast_type}", None)
-
-            if not visitor_fn:
-                continue
-
-            issue = visitor_fn(node)
-
-            if issue is None:
-                continue
-
-            self.results.append(issue)
-
-        return node
+    def add_issue(self, node: dict, *message_args):
+        line = node['lineno'],
+        character = node['col_offset'],
+        # Create an Issue object and append it to issues
+        issue = Issue(
+            file=self.compiler_output.get('contract_name', 'unknown'),
+            position=f"{line}:{character}",
+            severity=self.severity,
+            code=self.code,
+            message=self.message.format(*message_args)
+        )
+        self.issues.append(issue)
