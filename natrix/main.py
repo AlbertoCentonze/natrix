@@ -7,8 +7,12 @@ from natrix.rules import rules
 from natrix.rules.common import Issue
 from natrix.ast_tools import parse_file
 
+
 def cli_format_issues(issue: Issue):
-    return f"{issue.file}:{issue.position} {issue.severity} {issue.code}: {issue.message}"
+    return (
+        f"{issue.file}:{issue.position} {issue.severity} {issue.code}: {issue.message}"
+    )
+
 
 def lint_file(file_path):
     ast = parse_file(file_path)
