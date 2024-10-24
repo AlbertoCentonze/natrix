@@ -12,17 +12,15 @@ class MemoryExpansionRule(BaseRule):
         self.max_frame_size = max_frame_size
 
     def visit_FunctionDef(self, node):
-        function_name = get(node, 'name')
-        frame_info = get(self.compiler_output, f"metadata/function_info/{function_name}/frame_info")
-        frame_size = get(frame_info, 'frame_size')
+        function_name = get(node, "name")
+        frame_info = get(
+            self.compiler_output, f"metadata/function_info/{function_name}/frame_info"
+        )
+        frame_size = get(frame_info, "frame_size")
 
         if frame_size > self.max_frame_size:
             # Add an issue if the frame size exceeds the threshold
-            self.add_issue(
-                node,
-                function_name,
-                frame_size
-            )
+            self.add_issue(node, function_name, frame_size)
 
         # Continue visiting the function body if needed
-        self.visit(get(node, 'body'))
+        self.visit(get(node, "body"))
