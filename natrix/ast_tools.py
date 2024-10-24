@@ -1,5 +1,6 @@
 import vvm
 import json
+from dpath import get
 
 
 def parse_source(source: str):
@@ -8,8 +9,12 @@ def parse_source(source: str):
 
 def parse_file(file_path):
     vvm.install_vyper("0.4.0")
-    output = vvm.compile_files([file_path], output_format="annotated_ast", vyper_version="0.4.0")
-    metadata = vvm.compile_files([file_path], output_format="metadata", vyper_version="0.4.0")
+    output = vvm.compile_files(
+        [file_path], output_format="annotated_ast", vyper_version="0.4.0"
+    )
+    metadata = vvm.compile_files(
+        [file_path], output_format="metadata", vyper_version="0.4.0"
+    )
     # convert ast from string to python dict
     output = json.loads(output)
     output["metadata"] = metadata
@@ -19,9 +24,9 @@ def parse_file(file_path):
 class VyperASTVisitor:
     def visit(self, node):
         if isinstance(node, dict):
-            ast_type = node.get('ast_type')
+            ast_type = get(node, "ast_type", default=None)
             if ast_type:
-                method_name = f'visit_{ast_type}'
+                method_name = f"visit_{ast_type}"
                 visitor = getattr(self, method_name, self.generic_visit)
                 return visitor(node)
             else:
