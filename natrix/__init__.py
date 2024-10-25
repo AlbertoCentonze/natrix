@@ -1,3 +1,5 @@
+import sys
+
 import click
 
 from natrix.__version__ import __version__
@@ -18,6 +20,9 @@ def lint_file(file_path):
 
     for issue in issues:
         print(issue.cli_format())
+
+    if issues:
+        sys.exit(1)
 
 
 def find_vy_files(directory):
@@ -44,12 +49,17 @@ def main(path):
                 lint_file(file)
         else:
             print("Provided path is not a valid .vy file or directory.")
+            sys.exit(1)
     else:
         # If no path is provided, search for .vy files in the current directory recursively
         vy_files = find_vy_files(".")
 
         if not vy_files:
             print("No .vy files found in the current directory.")
+            sys.exit(1)
 
         for file in vy_files:
             lint_file(file)
+
+    print("Vyper files are lint free! 🐍")
+    sys.exit(0)
