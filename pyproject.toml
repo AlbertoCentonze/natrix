@@ -1,0 +1,15 @@
+[project]
+name = "natrix"
+version = "0.1.0"
+description = "A Vyper linter for fine sneks."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.7",
+    "dpath>=2.2.0",
+    "vvm>=0.3.1",
+]
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.3"
+]

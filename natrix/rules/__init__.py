@@ -1,0 +1,12 @@
+from natrix.rules.memory_expansion import MemoryExpansionRule
+from natrix.rules.common import Rule
+
+rules = [
+    Rule(
+        name="Memory Expansion Check",
+        description="Detect when memory expansion is too big compared to the specified threshold. "
+        "This can be useful to spot when dynarrays with a large number of elements "
+        "are being passed by value.",
+        run=MemoryExpansionRule().run,
+    )
+]
