@@ -14,5 +14,5 @@ rules = [
         name="Constant Naming Check",
         description="Detect when a constant is not named in UPPER_SNAKE_CASE.",
         run=ConstantNamingRule().run,
-    )
+    ),
 ]

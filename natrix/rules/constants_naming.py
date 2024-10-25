@@ -19,5 +19,3 @@ class ConstantNamingRule(BaseRule):
 
         if not var_name.isupper():
             self.add_issue(node, var_name)
-
-
