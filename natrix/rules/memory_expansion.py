@@ -21,6 +21,3 @@ class MemoryExpansionRule(BaseRule):
         if frame_size > self.max_frame_size:
             # Add an issue if the frame size exceeds the threshold
             self.add_issue(node, function_name, frame_size)
-
-        # Continue visiting the function body if needed
-        self.visit(get(node, "body"))
