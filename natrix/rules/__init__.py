@@ -3,8 +3,10 @@ from natrix.rules.common import Rule
 
 rules = [
     Rule(
-        name="DynArrayOverallocation",
-        description="Detect overallocation of DynArray",
+        name="Memory Expansion Check",
+        description="Detect when memory expansion is too big compared to the specified threshold. "
+        "This can be useful to spot when dynarrays with a large number of elements "
+        "are being passed by value.",
         run=MemoryExpansionRule().run,
     )
 ]
