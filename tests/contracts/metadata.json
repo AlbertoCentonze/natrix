@@ -1,1 +1,133 @@
-{"function_info": {"__init__": {"name": "__init__", "positional_args": {"_crvusd": "interface .venv/lib/python3.12/site-packages/vyper/builtins/interfaces/IERC20.vyi", "_factory": "interface contracts/interfaces/IControllerFactory.vyi", "receivers": "DynArray[Receiver, 100]", "owner": "address"}, "keyword_args": {}, "return_type": "None", "visibility": "deploy", "mutability": "nonpayable", "_ir_identifier": "external 19 __init__(interface .venv/lib/python3.12/site-packages/vyper/builtins/interfaces/IERC20.vyi,interface contracts/interfaces/IControllerFactory.vyi,DynArray[Receiver, 100],address)", "default_values": {}, "frame_info": {"frame_start": 6784, "frame_size": 13440}}, "_is_dynamic": {"name": "_is_dynamic", "positional_args": {"addr": "address"}, "keyword_args": {}, "return_type": "bool", "visibility": "internal", "mutability": "nonpayable", "_ir_identifier": "internal 10 _is_dynamic(address)", "default_values": {}, "frame_info": {"frame_start": 64, "frame_size": 384}}, "_get_dynamic_weight": {"name": "_get_dynamic_weight", "positional_args": {"addr": "address"}, "keyword_args": {}, "return_type": "uint256", "visibility": "internal", "mutability": "nonpayable", "_ir_identifier": "internal 11 _get_dynamic_weight(address)", "default_values": {}, "frame_info": {"frame_start": 64, "frame_size": 352}}, "_set_receivers": {"name": "_set_receivers", "positional_args": {"receivers": "DynArray[Receiver, 100]"}, "keyword_args": {}, "return_type": "None", "visibility": "internal", "mutability": "nonpayable", "_ir_identifier": "internal 13 _set_receivers(DynArray[Receiver, 100])", "default_values": {}, "frame_info": {"frame_start": 64, "frame_size": 6720}}, "dispatch_fees": {"name": "dispatch_fees", "positional_args": {}, "keyword_args": {"controllers": "DynArray[interface contracts/interfaces/IController.vyi, 50000]"}, "return_type": "None", "visibility": "external", "mutability": "nonpayable", "default_values": {"controllers": "[]"}, "_ir_identifier": "external 12 dispatch_fees(DynArray[interface contracts/interfaces/IController.vyi, 50000])", "frame_info": {"frame_start": 1600320, "frame_size": 3200608}}, "set_receivers": {"name": "set_receivers", "positional_args": {"receivers": "DynArray[Receiver, 100]"}, "keyword_args": {}, "return_type": "None", "visibility": "external", "mutability": "nonpayable", "_ir_identifier": "external 14 set_receivers(DynArray[Receiver, 100])", "default_values": {}, "frame_info": {"frame_start": 6784, "frame_size": 13152}}, "excess_receiver": {"name": "excess_receiver", "positional_args": {}, "keyword_args": {}, "return_type": "address", "visibility": "external", "mutability": "view", "_ir_identifier": "external 15 excess_receiver()", "default_values": {}, "frame_info": {"frame_start": 64, "frame_size": 64}}, "n_receivers": {"name": "n_receivers", "positional_args": {}, "keyword_args": {}, "return_type": "uint256", "visibility": "external", "mutability": "view", "_ir_identifier": "external 16 n_receivers()", "default_values": {}, "frame_info": {"frame_start": 64, "frame_size": 32}}}}
+{
+  "function_info": {
+    "__init__": {
+      "name": "__init__",
+      "positional_args": {
+        "_crvusd": "interface .venv/lib/python3.12/site-packages/vyper/builtins/interfaces/IERC20.vyi",
+        "_factory": "interface contracts/interfaces/IControllerFactory.vyi",
+        "receivers": "DynArray[Receiver, 100]",
+        "owner": "address"
+      },
+      "keyword_args": {},
+      "return_type": "None",
+      "visibility": "deploy",
+      "mutability": "nonpayable",
+      "_ir_identifier": "external 19 __init__(interface .venv/lib/python3.12/site-packages/vyper/builtins/interfaces/IERC20.vyi,interface contracts/interfaces/IControllerFactory.vyi,DynArray[Receiver, 100],address)",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 6784,
+        "frame_size": 13440
+      }
+    },
+    "_is_dynamic": {
+      "name": "_is_dynamic",
+      "positional_args": {
+        "addr": "address"
+      },
+      "keyword_args": {},
+      "return_type": "bool",
+      "visibility": "internal",
+      "mutability": "nonpayable",
+      "_ir_identifier": "internal 10 _is_dynamic(address)",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 64,
+        "frame_size": 384
+      }
+    },
+    "_get_dynamic_weight": {
+      "name": "_get_dynamic_weight",
+      "positional_args": {
+        "addr": "address"
+      },
+      "keyword_args": {},
+      "return_type": "uint256",
+      "visibility": "internal",
+      "mutability": "nonpayable",
+      "_ir_identifier": "internal 11 _get_dynamic_weight(address)",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 64,
+        "frame_size": 352
+      }
+    },
+    "_set_receivers": {
+      "name": "_set_receivers",
+      "positional_args": {
+        "receivers": "DynArray[Receiver, 100]"
+      },
+      "keyword_args": {},
+      "return_type": "None",
+      "visibility": "internal",
+      "mutability": "nonpayable",
+      "_ir_identifier": "internal 13 _set_receivers(DynArray[Receiver, 100])",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 64,
+        "frame_size": 6720
+      }
+    },
+    "dispatch_fees": {
+      "name": "dispatch_fees",
+      "positional_args": {},
+      "keyword_args": {
+        "controllers": "DynArray[interface contracts/interfaces/IController.vyi, 50000]"
+      },
+      "return_type": "None",
+      "visibility": "external",
+      "mutability": "nonpayable",
+      "default_values": {
+        "controllers": "[]"
+      },
+      "_ir_identifier": "external 12 dispatch_fees(DynArray[interface contracts/interfaces/IController.vyi, 50000])",
+      "frame_info": {
+        "frame_start": 1600320,
+        "frame_size": 3200608
+      }
+    },
+    "set_receivers": {
+      "name": "set_receivers",
+      "positional_args": {
+        "receivers": "DynArray[Receiver, 100]"
+      },
+      "keyword_args": {},
+      "return_type": "None",
+      "visibility": "external",
+      "mutability": "nonpayable",
+      "_ir_identifier": "external 14 set_receivers(DynArray[Receiver, 100])",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 6784,
+        "frame_size": 13152
+      }
+    },
+    "excess_receiver": {
+      "name": "excess_receiver",
+      "positional_args": {},
+      "keyword_args": {},
+      "return_type": "address",
+      "visibility": "external",
+      "mutability": "view",
+      "_ir_identifier": "external 15 excess_receiver()",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 64,
+        "frame_size": 64
+      }
+    },
+    "n_receivers": {
+      "name": "n_receivers",
+      "positional_args": {},
+      "keyword_args": {},
+      "return_type": "uint256",
+      "visibility": "external",
+      "mutability": "view",
+      "_ir_identifier": "external 16 n_receivers()",
+      "default_values": {},
+      "frame_info": {
+        "frame_start": 64,
+        "frame_size": 32
+      }
+    }
+  }
+}
