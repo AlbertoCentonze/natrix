@@ -6,7 +6,7 @@ class MemoryExpansionRule(BaseRule):
     def __init__(self, max_frame_size=20_000):
         super().__init__(
             severity="warning",
-            code="MEMORY_EXPANSION",
+            code="NTX001",
             message="Function '{}' has a large frame size of {} bytes.",
         )
         self.max_frame_size = max_frame_size
