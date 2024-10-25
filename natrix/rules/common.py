@@ -20,6 +20,11 @@ class Issue:
     code: str
     message: str
 
+    def cli_format(self):
+        return (
+            f"{self.file}:{self.position} {self.severity} {self.code}: {self.message}"
+        )
+
 
 class BaseRule(VyperASTVisitor):
     def __init__(self, severity: str, code: str, message: str):
@@ -35,9 +40,9 @@ class BaseRule(VyperASTVisitor):
         return self.issues
 
     def add_issue(self, node: dict, *message_args):
-        line = (node["lineno"],)
-        character = (node["col_offset"],)
-        # Create an Issue object and append it to issues
+        line = node["lineno"]
+        character = node["col_offset"]
+
         issue = Issue(
             file=get(self.compiler_output, "contract_name"),
             position=f"{line}:{character}",
