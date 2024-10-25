@@ -3,7 +3,7 @@ from dpath import get
 
 
 class MemoryExpansionRule(BaseRule):
-    def __init__(self, max_frame_size=1024):
+    def __init__(self, max_frame_size=20_000):
         super().__init__(
             severity="warning",
             code="MEMORY_EXPANSION",
