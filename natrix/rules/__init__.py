@@ -1,3 +1,6 @@
+from natrix.rules.implicit_internal import ImplicitInternalRule
+from natrix.rules.implicit_pure import ImplicitPureRule
+from natrix.rules.implicit_view import ImplicitViewRule
 from natrix.rules.memory_expansion import MemoryExpansionRule
 from natrix.rules.constants_naming import ConstantNamingRule
 from natrix.rules.common import Rule
@@ -14,5 +17,20 @@ rules = [
         name="Constant Naming Check",
         description="Detect when a constant is not named in UPPER_SNAKE_CASE.",
         run=ConstantNamingRule().run,
+    ),
+    Rule(
+        name="Implicit Internal Decorator Check",
+        description="Detect when internal functions are missing the '@internal' decorator.",
+        run=ImplicitInternalRule().run,
+    ),
+    Rule(
+        name="Implicit View Decorator Check",
+        description="Detect when view functions are missing the '@view' decorator.",
+        run=ImplicitViewRule().run,
+    ),
+    Rule(
+        name="Implicit Pure Decorator Check",
+        description="Detect when pure functions are missing the '@pure' decorator.",
+        run=ImplicitPureRule.run,
     ),
 ]
