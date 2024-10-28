@@ -5,6 +5,7 @@ from natrix.rules.memory_expansion import MemoryExpansionRule
 from natrix.rules.constants_naming import ConstantNamingRule
 from natrix.rules.common import Rule
 from natrix.rules.print_left import PrintLeftRule
+from natrix.rules.storage_caching import CacheStorageVariableRule
 
 rules = [
     Rule(
@@ -38,5 +39,10 @@ rules = [
         name="Print Left Check",
         description="Detect when a 'print' statement is used in the code.",
         run=PrintLeftRule().run,
+    ),
+    Rule(
+        name="Variable Caching Check",
+        description="Detect when a variable is accessed multiple times in a function and suggest caching it.",
+        run=CacheStorageVariableRule().run,
     ),
 ]
