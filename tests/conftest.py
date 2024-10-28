@@ -3,27 +3,28 @@ import json
 import pytest
 
 
-@pytest.fixture()
-def fee_splitter_contract():
-    with open("tests/contracts/fee_splitter/ast.json") as ast_raw:
-        ast = json.load(ast_raw)
+def output_loader(contract_name):
+    with open(f"tests/contracts/{contract_name}/ast.json") as output_raw:
+        ast = json.load(output_raw)
 
-    with open("tests/contracts/fee_splitter/metadata.json") as metadata_raw:
+    with open(f"tests/contracts/{contract_name}/metadata.json") as metadata_raw:
         metadata = json.load(metadata_raw)
 
     ast["metadata"] = metadata
 
     return ast
+
+
+@pytest.fixture()
+def fee_splitter_contract():
+    return output_loader("fee_splitter")
 
 
 @pytest.fixture()
 def dummy_version_contract():
-    with open("tests/contracts/version_dummy/ast.json") as ast_raw:
-        ast = json.load(ast_raw)
+    return output_loader("version_dummy")
 
-    with open("tests/contracts/version_dummy/metadata.json") as metadata_raw:
-        metadata = json.load(metadata_raw)
 
-    ast["metadata"] = metadata
-
-    return ast
+@pytest.fixture()
+def uncached_contract():
+    return output_loader("uncached")
