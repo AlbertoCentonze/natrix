@@ -1,0 +1,1 @@
+{"function_info": {"not_caching_a_thing": {"name": "not_caching_a_thing", "positional_args": {}, "keyword_args": {}, "return_type": "uint256", "visibility": "internal", "mutability": "nonpayable", "_ir_identifier": "internal 1 not_caching_a_thing()", "default_values": {}, "frame_info": {"frame_start": 64, "frame_size": 576}}}}
