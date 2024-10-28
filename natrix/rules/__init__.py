@@ -4,6 +4,7 @@ from natrix.rules.implicit_view import ImplicitViewRule
 from natrix.rules.memory_expansion import MemoryExpansionRule
 from natrix.rules.constants_naming import ConstantNamingRule
 from natrix.rules.common import Rule
+from natrix.rules.print_left import PrintLeftRule
 
 rules = [
     Rule(
@@ -32,5 +33,10 @@ rules = [
         name="Implicit Pure Decorator Check",
         description="Detect when pure functions are missing the '@pure' decorator.",
         run=ImplicitPureRule.run,
+    ),
+    Rule(
+        name="Print Left Check",
+        description="Detect when a 'print' statement is used in the code.",
+        run=PrintLeftRule().run,
     ),
 ]
