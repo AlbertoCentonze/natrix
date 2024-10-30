@@ -3,13 +3,12 @@ from dpath import get
 
 
 class CacheStorageVariableRule(BaseRule):
-    def __init__(self, max_frame_size=20_000):
+    def __init__(self):
         super().__init__(
             severity="optimization",
             code="NTX007",
             message="Variable '{}' is accessed multiple times; consider caching it to save gas.",
         )
-        self.max_frame_size = max_frame_size
 
     def visit_FunctionDef(self, node):
         # Dictionary to keep track of storage variable accesses
