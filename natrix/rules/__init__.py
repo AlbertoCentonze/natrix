@@ -6,6 +6,7 @@ from natrix.rules.constants_naming import ConstantNamingRule
 from natrix.rules.common import Rule
 from natrix.rules.print_left import PrintLeftRule
 from natrix.rules.storage_caching import CacheStorageVariableRule
+from natrix.rules.unused_variable import UnusedVariableRule
 
 rules = [
     Rule(
@@ -44,5 +45,10 @@ rules = [
         name="Variable Caching Check",
         description="Detect when a variable is accessed multiple times in a function and suggest caching it.",
         run=CacheStorageVariableRule().run,
+    ),
+    Rule(
+        name="Unused Variable Check",
+        description="Detect when a variable is declared but not used.",
+        run=UnusedVariableRule().run,
     ),
 ]
