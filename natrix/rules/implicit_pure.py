@@ -3,7 +3,7 @@ from dpath import get
 
 
 class ImplicitPureRule(BaseRule):
-    def __init__(self, max_frame_size=20_000):
+    def __init__(self):
         super().__init__(
             severity="style",
             code="NTX005",
