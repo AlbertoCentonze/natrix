@@ -33,7 +33,7 @@ rules = [
     Rule(
         name="Implicit Pure Decorator Check",
         description="Detect when pure functions are missing the '@pure' decorator.",
-        run=ImplicitPureRule.run,
+        run=ImplicitPureRule().run,
     ),
     Rule(
         name="Print Left Check",
