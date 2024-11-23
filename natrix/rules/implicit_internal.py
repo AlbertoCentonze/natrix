@@ -11,6 +11,9 @@ class ImplicitInternalRule(BaseRule):
         )
 
     def visit_FunctionDef(self, node):
+        if self.is_constructor(node):
+            return
+
         # Check if the function is internal by examining if it has no 'external' decorator
         is_internal = not any(
             decorator["id"] == "external"
