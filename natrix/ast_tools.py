@@ -1,24 +1,25 @@
-import vvm
-import json
 from dpath import get
+import subprocess
+import json
 
 
-def parse_source(source: str):
-    pass  # TODO
+def vyper_compile(filename, formatting):
+    command = ["uvx", "vyper@0.4.0", "-f", formatting, filename]
+
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+    stdout, stderr = process.communicate()
+
+    return json.loads(stdout)
 
 
 def parse_file(file_path):
-    vvm.install_vyper("0.4.0")
-    output = vvm.compile_files(
-        [file_path], output_format="annotated_ast", vyper_version="0.4.0"
-    )
-    metadata = vvm.compile_files(
-        [file_path], output_format="metadata", vyper_version="0.4.0"
-    )
-    # convert ast from string to python dict
-    output = json.loads(output)
-    output["metadata"] = metadata
-    return output
+    ast = vyper_compile(file_path, "annotated_ast")
+    metadata = vyper_compile(file_path, "metadata")
+
+    ast["metadata"] = metadata
+    return ast
 
 
 class VyperASTVisitor:
@@ -40,3 +41,12 @@ class VyperASTVisitor:
         for key, value in node.items():
             if isinstance(value, (dict, list)):
                 self.visit(value)
+
+    def is_constructor(self, node):
+        if not isinstance(node, dict):
+            return False
+
+        is_function = get(node, "ast_type", default=None) == "FunctionDef"
+        is_constructor = get(node, "name", default=None) == "__init__"
+
+        return is_function and is_constructor
