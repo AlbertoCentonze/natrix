@@ -29,12 +29,6 @@ class CacheStorageVariableRule(BaseRule):
                 self._handle_expr(stmt, storage_vars)
             elif stmt["ast_type"] == "Return":
                 self._handle_return(stmt, storage_vars)
-            # Add other statement types if necessary
-            elif stmt["ast_type"] == "For":
-                self._handle_for(stmt, storage_vars)
-            elif stmt["ast_type"] == "While":
-                self._handle_while(stmt, storage_vars)
-            # ... and so on
 
     def _handle_assignment(self, stmt, storage_vars):
         target = get(stmt, "target", default={})
