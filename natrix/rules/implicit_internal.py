@@ -1,3 +1,4 @@
+from natrix.ast_tools import is_constructor
 from natrix.rules.common import BaseRule
 from dpath import get
 
@@ -11,7 +12,7 @@ class ImplicitInternalRule(BaseRule):
         )
 
     def visit_FunctionDef(self, node):
-        if self.is_constructor(node):
+        if is_constructor(node):
             return
 
         # Check if the function is internal by examining if it has no 'external' decorator
