@@ -1,33 +1,31 @@
 import json
-from json import JSONDecodeError
 
 import pytest
 
 from natrix import parse_file
 
 
-def output_loader(contract_name):
-    # try to load normally
-    try:
-        compiler_output = parse_file(f"tests/contracts/{contract_name}/source.vy")
-    # workaround for vyz archives till 0.4.1 fixes this
-    except JSONDecodeError:
-        with open(f"tests/contracts/{contract_name}/ast.json") as output_raw:
-            ast = json.load(output_raw)
+def output_loader_old(contract_name):
+    with open(f"tests/contracts/{contract_name}/ast.json") as output_raw:
+        ast = json.load(output_raw)
 
-        with open(f"tests/contracts/{contract_name}/metadata.json") as metadata_raw:
-            metadata = json.load(metadata_raw)
+    with open(f"tests/contracts/{contract_name}/metadata.json") as metadata_raw:
+        metadata = json.load(metadata_raw)
 
-        ast["metadata"] = metadata
+    ast["metadata"] = metadata
 
-        compiler_output = ast
+    compiler_output = ast
 
     return compiler_output
 
 
+def output_loader(contract_name):
+    return parse_file(f"tests/contracts/{contract_name}.vy")
+
+
 @pytest.fixture()
 def fee_splitter_contract():
-    return output_loader("fee_splitter")
+    return output_loader_old("fee_splitter")
 
 
 @pytest.fixture()
@@ -42,4 +40,4 @@ def uncached_contract():
 
 @pytest.fixture()
 def snekmate01_ownable_contract():
-    return output_loader("snekmate")
+    return output_loader("ownable")

@@ -1,5 +1,6 @@
 a: uint256
 b: public(address)
+c: address
 
 def not_caching_a_thing() -> uint256:
     hey_unused_var: uint256 = 1
@@ -18,4 +19,10 @@ def not_caching_a_thing() -> uint256:
         self.b = self
 
     self.b = msg.sender
+    if self.c == empty(address):
+        self.c = msg.sender
     return 1
+
+def cross_function_not_cached():
+    if self.c == empty(address):
+        self.c = msg.sender
