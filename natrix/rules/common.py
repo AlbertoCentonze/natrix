@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Callable, List
 
+from natrix.ast_node import Node
 from natrix.ast_tools import VyperASTVisitor
-from dpath import get
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ class BaseRule(VyperASTVisitor):
 
     def run(self, compiler_output) -> List[Issue]:
         self.compiler_output = compiler_output
-        self.visit(compiler_output["ast"])
+        self.visit(Node(compiler_output["ast"]))
         return self.issues
 
     def add_issue(self, node: dict, *message_args):
@@ -44,7 +44,7 @@ class BaseRule(VyperASTVisitor):
         character = node["col_offset"]
 
         issue = Issue(
-            file=get(self.compiler_output, "contract_name"),
+            file=self.compiler_output.get("contract_name"),
             position=f"{line}:{character}",
             severity=self.severity,
             code=self.code,
