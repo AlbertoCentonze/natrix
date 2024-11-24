@@ -1,5 +1,56 @@
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import List
+
+from natrix.ast_node import Node
 from natrix.rules.common import BaseRule
-from dpath import get
+
+
+@dataclass
+class MemoryAccess:
+    node: Node  # Directly reference the AST node
+    type: str  # "read" or "write"
+    var: str  # Variable name
+
+
+def analyze_access_patterns(accesses) -> List[MemoryAccess]:
+    # Sort accesses by the node's position in the code
+    combined = sorted(
+        accesses, key=lambda x: (x.node.get("lineno"), x.node.get("col_offset"))
+    )
+    filtered_combined = []
+
+    # Identify positions of writes to filter out overlapping reads
+    seen_write_positions = {
+        (access.node, access.var) for access in accesses if access.type == "write"
+    }
+
+    # Filter reads that occur at the same position as a write
+    for access in combined:
+        if access.type == "read" and (access.node, access.var) in seen_write_positions:
+            continue
+        filtered_combined.append(access)
+
+    # Analyze read/write patterns to suggest caching
+    access_counts = defaultdict(int)  # Tracks consecutive reads
+    last_write = {}  # Tracks last write for each variable
+    suggestions = []  # Collect suggestions for caching
+
+    for access in filtered_combined:
+        if access.type == "read":
+            # Increment read count if no intervening write
+            if last_write.get(access.var, None) != access.node:
+                access_counts[access.var] += 1
+                if access_counts[access.var] > 1:
+                    suggestions.append(
+                        access
+                    )  # Include full MemoryAccess object for reporting
+        elif access.type == "write":
+            # Reset read count on a write
+            last_write[access.var] = access.node
+            access_counts[access.var] = 0
+
+    return suggestions
 
 
 class CacheStorageVariableRule(BaseRule):
@@ -7,95 +58,40 @@ class CacheStorageVariableRule(BaseRule):
         super().__init__(
             severity="optimization",
             code="NTX007",
-            message="Variable '{}' is accessed multiple times; consider caching it to save gas.",
+            message="Storage variable '{}' is accessed multiple times; consider caching it to save gas.",
         )
+        self.accesses = []
 
-    def visit_FunctionDef(self, node):
-        # Dictionary to keep track of storage variable accesses
-        # Key: variable name, Value: {'read_count': int}
-        storage_vars = {}
+    def visit_FunctionDef(self, node: Node):
+        # Reset accesses for each function
+        self.accesses = []
 
-        # Start traversing the function body
-        self._traverse_statements(get(node, "body", default=[]), storage_vars)
-
-    def _traverse_statements(self, statements, storage_vars):
-        for stmt in statements:
-            # Handle different statement types recursively
-            if stmt["ast_type"] in ["Assign", "AnnAssign"]:
-                self._handle_assignment(stmt, storage_vars)
-            elif stmt["ast_type"] == "If":
-                self._handle_if(stmt, storage_vars)
-            elif stmt["ast_type"] == "Expr":
-                self._handle_expr(stmt, storage_vars)
-            elif stmt["ast_type"] == "Return":
-                self._handle_return(stmt, storage_vars)
-
-    def _handle_assignment(self, stmt, storage_vars):
-        target = get(stmt, "target", default={})
-        value = get(stmt, "value", default={})
-
-        # Check if the target is a storage variable (self.<variable>)
-        if self._is_storage_variable(target):
-            var_name = target["attr"]
-            # Reset read count upon write
-            storage_vars[var_name] = {"read_count": 0}
-            # Also check if the value reads storage variables
-            self._check_storage_reads(value, storage_vars)
-        else:
-            # Check if the value reads storage variables
-            self._check_storage_reads(value, storage_vars)
-
-    def _handle_if(self, stmt, storage_vars):
-        # Check the condition
-        test = get(stmt, "test", default={})
-        self._check_storage_reads(test, storage_vars)
-
-        # Copy the storage_vars to maintain separate counts in different branches
-        self._traverse_statements(get(stmt, "body", default=[]), storage_vars.copy())
-        self._traverse_statements(get(stmt, "orelse", default=[]), storage_vars.copy())
-
-    def _handle_expr(self, stmt, storage_vars):
-        value = get(stmt, "value", default={})
-        self._check_storage_reads(value, storage_vars)
-
-    def _handle_return(self, stmt, storage_vars):
-        value = get(stmt, "value", default={})
-        self._check_storage_reads(value, storage_vars)
-
-    def _check_storage_reads(self, node, storage_vars):
-        """Recursively check for storage variable reads in the given node."""
-        if not isinstance(node, dict):
+        # Collect all attributes within the function
+        attrs = node.get_descendants("Attribute")
+        if not attrs:
             return
 
-        ast_type = get(node, "ast_type", default=None)
-        if ast_type == "Attribute" and self._is_storage_variable(node):
-            var_name = node["attr"]
-            var_info = storage_vars.get(var_name, {"read_count": 0})
+        # Process variable reads and writes
+        for attr in attrs:
+            for access_type in ("variable_reads", "variable_writes"):
+                if access_type in attr.node_dict:
+                    for item in attr.get(access_type):
+                        self.accesses.append(
+                            MemoryAccess(
+                                node=attr,
+                                type="read"
+                                if access_type == "variable_reads"
+                                else "write",
+                                var=item.get("name"),
+                            )
+                        )
 
-            var_info["read_count"] += 1
+        # Analyze accesses for caching suggestions
+        suggestions = analyze_access_patterns(self.accesses)
 
-            storage_vars[var_name] = var_info
-
-            # If read count reaches 2, suggest caching
-            if var_info["read_count"] == 2:
-                self.add_issue(node, var_name)
-        else:
-            # Recurse into child nodes
-            for key, value in node.items():
-                if isinstance(value, dict):
-                    self._check_storage_reads(value, storage_vars)
-                elif isinstance(value, list):
-                    for item in value:
-                        if isinstance(item, dict):
-                            self._check_storage_reads(item, storage_vars)
-
-    def _is_storage_variable(self, node):
-        """Check if the node represents a storage variable access (self.<variable>)."""
-        if get(node, "ast_type", default=None) == "Attribute":
-            value = get(node, "value", default={})
-            if (
-                get(value, "ast_type", default=None) == "Name"
-                and get(value, "id", default=None) == "self"
-            ):
-                return True
-        return False
+        # Emit warnings or suggestions
+        for suggestion in suggestions:
+            self.add_issue(
+                suggestion.node.node_dict,  # Pass the node where the issue occurs
+                suggestion.var,  # Pass the variable name directly from MemoryAccess
+            )
