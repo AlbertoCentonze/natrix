@@ -14,5 +14,3 @@ class PrintLeftRule(BaseRule):
         func_id = get(node, "func.id")
         if func_id == "print":
             self.add_issue(node)
-        # Continue visiting child nodes if necessary
-        self.generic_visit(node)
