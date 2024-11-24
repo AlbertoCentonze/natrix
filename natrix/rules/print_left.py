@@ -1,5 +1,5 @@
+from natrix.ast_tools import get
 from natrix.rules.common import BaseRule
-from dpath import get
 
 
 class PrintLeftRule(BaseRule):
@@ -10,7 +10,9 @@ class PrintLeftRule(BaseRule):
             message="Found a 'print' statement; consider removing it in production code.",
         )
 
-    def visit_Name(self, node):
-        # Check if the name identifier is 'print'
-        if get(node, "id", default="") == "print":
+    def visit_Call(self, node):
+        func_id = get(node, "func.id")
+        if func_id == "print":
             self.add_issue(node)
+        # Continue visiting child nodes if necessary
+        self.generic_visit(node)
