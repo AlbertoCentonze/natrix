@@ -6,8 +6,8 @@ def test_storage_caching(uncached_contract):
 
     issues = rule.run(uncached_contract)
     assert len(issues) == 1
-    assert issues[0].position == "15:7"
+    assert issues[0].position == "19:7"
     assert (
         issues[0].message
-        == "Variable 'a' is accessed multiple times; consider caching it to save gas."
+        == "Storage variable 'a' is accessed multiple times; consider caching it to save gas."
     )
