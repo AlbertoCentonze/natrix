@@ -51,7 +51,7 @@ def is_constructor(node):
     )
 
 
-def get(node, field_str):
+def get(node, field_str, default=None):
     """
     Recursive getter function for node attributes.
 
@@ -61,6 +61,8 @@ def get(node, field_str):
         The current node in the AST.
     field_str : str
         Attribute string of the location of the node to return.
+    default: Any, optional
+        Default value to return if the field string is invalid.
 
     Returns
     -------
@@ -68,7 +70,7 @@ def get(node, field_str):
         Value at the location of the given field string, if one
         exists. `None` if the field string is empty or invalid.
     """
-    return dpath.get(node, field_str, default=None, separator=".")
+    return dpath.get(node, field_str, default=default, separator=".")
 
 
 def _apply_filters(nodes, node_type=None, filters=None, reverse=False):
