@@ -105,7 +105,7 @@ class Node:
 
     def get_descendants(
         self, node_type=None, filters=None, include_self=False, reverse=False
-    ):
+    ) -> List["Node"]:
         """
         Return a list of descendant nodes of this node which match the given filter(s).
 
@@ -146,7 +146,7 @@ class Node:
             self._cache_descendants = nodes
         return self._cache_descendants
 
-    def get(self, field_str):
+    def get(self, field_str, default=None):
         """
         Recursive getter function for node attributes.
 
@@ -164,11 +164,11 @@ class Node:
         obj = self.node_dict
         for key in field_str.split("."):
             if isinstance(obj, dict):
-                obj = obj.get(key, None)
+                obj = obj.get(key, default)
             else:
-                return None
+                return default
             if obj is None:
-                return None
+                return default
         return obj
 
 
