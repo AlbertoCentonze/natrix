@@ -10,7 +10,8 @@ def not_caching_a_thing() -> uint256:
         print("hello")
 
     # a: sstore (reset count)
-    self.a = 1
+    self.c = self.b
+    self.a += 1
     # a: sload
     if self.a == 1:
         self.b = msg.sender
