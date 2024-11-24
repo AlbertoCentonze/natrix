@@ -1,5 +1,4 @@
 from natrix.rules.common import BaseRule
-from dpath import get
 
 
 class ConstantNamingRule(BaseRule):
@@ -12,10 +11,10 @@ class ConstantNamingRule(BaseRule):
         self.max_frame_size = max_frame_size
 
     def visit_VariableDecl(self, node):
-        if not get(node, "is_constant"):
+        if not node.get("is_constant"):
             return
 
-        var_name = get(node, "target/id")
+        var_name = node.get("target.id")
 
         if not var_name.isupper():
             self.add_issue(node, var_name)
