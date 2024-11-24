@@ -8,9 +8,9 @@ from natrix.rules.common import BaseRule
 
 @dataclass
 class MemoryAccess:
-    node: Node  # Directly reference the AST node
+    node: Node
     type: str  # "read" or "write"
-    var: str  # Variable name
+    var: str
 
 
 def analyze_access_patterns(accesses) -> List[MemoryAccess]:
@@ -92,6 +92,6 @@ class CacheStorageVariableRule(BaseRule):
         # Emit warnings or suggestions
         for suggestion in suggestions:
             self.add_issue(
-                suggestion.node.node_dict,  # Pass the node where the issue occurs
-                suggestion.var,  # Pass the variable name directly from MemoryAccess
+                suggestion.node,
+                suggestion.var,
             )

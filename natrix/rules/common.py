@@ -39,9 +39,9 @@ class BaseRule(VyperASTVisitor):
         self.visit(Node(compiler_output["ast"]))
         return self.issues
 
-    def add_issue(self, node: dict, *message_args):
-        line = node["lineno"]
-        character = node["col_offset"]
+    def add_issue(self, node: Node, *message_args):
+        line = node.get("lineno")
+        character = node.get("col_offset")
 
         issue = Issue(
             file=self.compiler_output.get("contract_name"),
