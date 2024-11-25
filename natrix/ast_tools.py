@@ -5,7 +5,7 @@ from natrix.ast_node import Node
 
 
 def vyper_compile(filename, formatting):
-    command = ["uvx", "vyper@0.4.0", "-f", formatting, filename]
+    command = ["uvx", "--offline", "vyper@0.4.0", "-f", formatting, filename]
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -32,6 +32,6 @@ class VyperASTVisitor:
             if visitor:
                 visitor(node)
 
-        if len(node.children) > 0:
+        if node.children:
             for child in node.children:
                 self.visit(child)
