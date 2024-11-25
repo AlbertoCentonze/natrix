@@ -4,10 +4,19 @@ c: address
 
 def not_caching_a_thing() -> uint256:
     hey_unused_var: uint256 = 1
+    another_unused_var: address = empty(address)
+    used_var: uint256 = 1234
 
     # a: sload
     if self.a == 1:
         print("hello")
+
+    if used_var == 1234:
+        print("world")
+
+    # still unused
+    another_unused_var = msg.sender
+    hey_unused_var += 12
 
     # a: sstore (reset count)
     self.c = self.b
