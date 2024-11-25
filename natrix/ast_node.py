@@ -31,6 +31,16 @@ class Node:
     def is_constructor(self):
         return self.ast_type == "FunctionDef" and self.get("name") == "__init__"
 
+    @cached_property
+    def modifiers(self) -> List[str]:
+        # !! this function only returns modifiers that are explicit
+        # !! in the source contract
+        if self.ast_type != "FunctionDef":
+            raise ValueError(
+                "Node type is not a FunctionDef so it can't have modifiers"
+            )
+        return [decorator["id"] for decorator in self.get("decorator_list")]
+
     def __repr__(self):
         match self.ast_type:
             case None:
@@ -40,9 +50,11 @@ class Node:
             case "FunctionDef":
                 return f"<FunctionDef {self.get('name')}>"
             case "Assign":
-                return f"<{self.get('value.attr')} = {self.get('target.attr')}>"
+                return f"<{self.get('target.attr')} = {self.get('value.attr')}>"
             case "AnnAssign":
                 return f"<{self.get('target.id')} = {self.get('value.value')}>"
+            # case "AugAssign":
+            # return f"<{}>"
             case _:
                 return f"<Node {self.ast_type}>"
 
