@@ -1,4 +1,4 @@
-from natrix.ast_tools import get
+from natrix.ast_node import Node
 from natrix.rules.common import BaseRule
 
 
@@ -10,7 +10,7 @@ class PrintLeftRule(BaseRule):
             message="Found a 'print' statement; consider removing it in production code.",
         )
 
-    def visit_Call(self, node):
-        func_id = get(node, "func.id")
+    def visit_Call(self, node: Node):
+        func_id = node.get("func.id")
         if func_id == "print":
             self.add_issue(node)
