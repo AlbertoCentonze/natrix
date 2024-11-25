@@ -41,3 +41,8 @@ def uncached_contract():
 @pytest.fixture()
 def snekmate01_ownable_contract():
     return output_loader("ownable")
+
+
+@pytest.fixture()
+def twa_contract():
+    return output_loader("TWA")
