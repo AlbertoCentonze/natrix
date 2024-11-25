@@ -35,7 +35,7 @@ class BaseRule(VyperASTVisitor):
         self.issues = []
 
     def run(self, compiler_output) -> List[Issue]:
-        self.compiler_output = compiler_output
+        self.compiler_output = Node(compiler_output)
         self.visit(Node(compiler_output["ast"]))
         return self.issues
 
