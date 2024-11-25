@@ -1,6 +1,4 @@
-from natrix.ast_tools import is_constructor
 from natrix.rules.common import BaseRule
-from dpath import get
 
 
 class ImplicitInternalRule(BaseRule):
@@ -12,22 +10,11 @@ class ImplicitInternalRule(BaseRule):
         )
 
     def visit_FunctionDef(self, node):
-        if is_constructor(node):
+        if (
+            node.is_constructor
+            or "external" in node.modifiers
+            or "internal" in node.modifiers
+        ):
             return
 
-        # Check if the function is internal by examining if it has no 'external' decorator
-        is_internal = not any(
-            decorator["id"] == "external"
-            for decorator in get(node, "decorator_list", default=[])
-        )
-
-        # Check if the function already has an 'internal' decorator
-        has_internal_decorator = any(
-            decorator["id"] == "internal"
-            for decorator in get(node, "decorator_list", default=[])
-        )
-
-        # Function should be flagged if it is internal and missing the @internal decorator
-        if is_internal and not has_internal_decorator:
-            function_name = get(node, "name")
-            self.add_issue(node, function_name)
+        self.add_issue(node, node.get("name"))
