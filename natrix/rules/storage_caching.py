@@ -1,19 +1,12 @@
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import List
+from typing import Set
 
 from natrix.ast_node import Node
 from natrix.rules.common import BaseRule
+from natrix.rules.storage_analysis import MemoryAccess, get_memory_accesses
 
 
-@dataclass
-class MemoryAccess:
-    node: Node
-    type: str  # "read" or "write"
-    var: str
-
-
-def analyze_access_patterns(accesses) -> List[MemoryAccess]:
+def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
     # Sort accesses by the node's position in the code
     combined = sorted(
         accesses, key=lambda x: (x.node.get("lineno"), x.node.get("col_offset"))
@@ -60,38 +53,16 @@ class CacheStorageVariableRule(BaseRule):
             code="NTX007",
             message="Storage variable '{}' is accessed multiple times; consider caching it to save gas.",
         )
-        self.accesses = []
 
     def visit_FunctionDef(self, node: Node):
-        # Reset accesses for each function
-        self.accesses = []
-
-        # Collect all attributes within the function
-        attrs = node.get_descendants("Attribute")
-        if not attrs:
-            return
-
-        # Process variable reads and writes
-        for attr in attrs:
-            for access_type in ("variable_reads", "variable_writes"):
-                if access_type in attr.node_dict:
-                    for item in attr.get(access_type):
-                        self.accesses.append(
-                            MemoryAccess(
-                                node=attr,
-                                type="read"
-                                if access_type == "variable_reads"
-                                else "write",
-                                var=item.get("name"),
-                            )
-                        )
+        accesses = get_memory_accesses(node)
 
         # Analyze accesses for caching suggestions
-        suggestions = analyze_access_patterns(self.accesses)
+        issues = analyze_access_patterns(accesses)
 
         # Emit warnings or suggestions
-        for suggestion in suggestions:
+        for issue in issues:
             self.add_issue(
-                suggestion.node,
-                suggestion.var,
+                issue.node,
+                issue.var,
             )
