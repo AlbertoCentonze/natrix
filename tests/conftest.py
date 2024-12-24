@@ -51,3 +51,8 @@ def twa_contract():
 @pytest.fixture()
 def unused_import_contract():
     return output_loader("unused_import")
+
+
+@pytest.fixture()
+def scrvusd_oracle_contract():
+    return output_loader("scrvusd_oracle")
