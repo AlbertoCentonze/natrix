@@ -46,3 +46,8 @@ def snekmate01_ownable_contract():
 @pytest.fixture()
 def twa_contract():
     return output_loader("TWA")
+
+
+@pytest.fixture()
+def unused_import_contract():
+    return output_loader("unused_import")

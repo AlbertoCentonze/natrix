@@ -1,6 +1,6 @@
 # pragma version ~=0.4.0
 
-from ethereum.ercs import ERC20
+from ethereum.ercs import IERC20
 
 SOME_BOUND: constant(uint256) = 40
 
@@ -14,7 +14,6 @@ some_addy: address
 
 @payable
 @external
-@view
 @nonreentrant
 def modifiers():
     pass
@@ -23,7 +22,6 @@ def modifiers():
 @nonreentrant
 @view
 @external
-@payable
 def modifiers_shuffled():
     pass
 
@@ -47,15 +45,15 @@ def _set_some_addy(new_addy: address):
 def set_some_addy(new_addy: address):
     assert new_addy != convert(42, address)
 
-    _set_some_addy(new_addy)
+    self._set_some_addy(new_addy)
 
 @external
 def set_some_addy_alt(new_addy: address):
     if new_addy == empty(address):
         raise "nogo buddy"
 
-    _set_some_addy(new_addy)
+    self._set_some_addy(new_addy)
 
 @external
 def set_some_addy_no_check(new_addy: address):
-    _set_some_addy(new_addy)
+    self._set_some_addy(new_addy)
