@@ -1,74 +1,56 @@
+from natrix.ast_node import Node
 from natrix.rules.common import BaseRule
-from dpath import get
 
 
 class UnusedVariableRule(BaseRule):
+    """
+    Detects variables that are declared (via assignments like Assign, AnnAssign, and AugAssign)
+    but never actually referenced (via Name nodes) within a function. It matches each declared
+    variable to its assignment node and checks if it appears in any Name node usages.
+
+    Example:
+        def example_function():
+            unused_var: uint256 = 42  # This line will be reported.
+    """
+
     def __init__(self):
         super().__init__(
             severity="warning",
             code="NTX008",
             message="Variable '{}' is declared but never used.",
         )
-        self.declared_vars = {}  # Track variables declared in the current function
-        self.in_declaration = False  # Track if currently in a declaration
 
-    def visit_FunctionDef(self, node):
-        # Initialize declared_vars for the current function
-        self.declared_vars = {}
+    def visit_FunctionDef(self, node: Node):
+        # Gather all assignment-related nodes
+        all_assigns = node.get_descendants(
+            node_type=("AnnAssign", "Assign", "AugAssign")
+        )
 
-        # First, collect all variable declarations without marking anything as used
-        self._collect_declarations(get(node, "body", default=[]))
+        # Collect the assigned variable names, excluding None, and map them to their assignment nodes
+        assigned_var_nodes = {}
+        for assign in all_assigns:
+            var_name = assign.get("target.id")
+            if var_name is not None:
+                assigned_var_nodes[var_name] = assign
 
-        # Then, traverse the function body again to detect usage
-        for child in node["body"]:
-            self._detect_usage(child)
+        # Gather the node IDs for these assignments
+        assigned_var_node_ids = [assign.get("target.node_id") for assign in all_assigns]
 
-        # Report any variables that were declared but never used
-        for var_name, var_info in self.declared_vars.items():
-            if not var_info["is_used"]:
-                # Directly pass the variable name as an argument for `add_issue`
-                self.add_issue(
-                    var_info["node"], var_name
-                )  # Pass `var_name` as message argument
+        # Collect all 'Name' nodes in the function
+        all_names = node.get_descendants(node_type="Name")
 
-    def _collect_declarations(self, statements):
-        """Collect all declared variables in the function body without marking them as used."""
-        for stmt in statements:
-            if stmt.get("ast_type") in ["Assign", "AnnAssign"]:
-                target = get(stmt, "target", default={})
-                if target.get("ast_type") == "Name":
-                    var_name = target["id"]
-                    # Store both the unused status and the declaration node
-                    self.declared_vars[var_name] = {"is_used": False, "node": target}
-            elif stmt.get("ast_type") in ["If", "For", "While"]:
-                # Recursively collect declarations in nested blocks
-                self._collect_declarations(get(stmt, "body", default=[]))
-                self._collect_declarations(get(stmt, "orelse", default=[]))
+        # Filter only those names that appear in our assigned variable set
+        candidate_assigned_names = [
+            name for name in all_names if name.get("id") in assigned_var_nodes
+        ]
 
-    def _detect_usage(self, node):
-        """Traverse the AST to mark declared variables as used."""
-        if not isinstance(node, dict):
-            return
+        # Determine which assigned variables are actually used
+        used_var_names = set()
+        for name in candidate_assigned_names:
+            if name.get("node_id") not in assigned_var_node_ids:
+                used_var_names.add(name.get("id"))
 
-        ast_type = node.get("ast_type", None)
-        if ast_type == "Name" and not self.in_declaration:
-            # If the name corresponds to a declared variable, mark it as used
-            var_name = node.get("id", None)
-            if var_name in self.declared_vars:
-                self.declared_vars[var_name]["is_used"] = True
-
-        elif ast_type in ["Assign", "AnnAssign"]:
-            # Set in_declaration to True when visiting an assignment, to avoid self-referencing
-            self.in_declaration = True
-            self.generic_visit(node)  # Visit the assignment
-            self.in_declaration = False
-
-        else:
-            # Recursively check for usage in all child nodes
-            for key, value in node.items():
-                if isinstance(value, dict):
-                    self._detect_usage(value)
-                elif isinstance(value, list):
-                    for item in value:
-                        if isinstance(item, dict):
-                            self._detect_usage(item)
+        # Any remaining variable in assigned_var_nodes is unused
+        for var_name, assign_node in assigned_var_nodes.items():
+            if var_name not in used_var_names:
+                self.add_issue(assign_node, var_name)
