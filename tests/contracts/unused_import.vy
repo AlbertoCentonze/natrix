@@ -48,7 +48,7 @@ def set_some_addy(new_addy: address):
     self._set_some_addy(new_addy)
 
 @external
-def set_some_addy_alt(new_addy: address):
+def set_some_addy_alt(new_addy: address, unused_arg: uint256):
     if new_addy == empty(address):
         raise "nogo buddy"
 
