@@ -7,6 +7,8 @@ from natrix.rules.common import Rule
 from natrix.rules.print_left import PrintLeftRule
 from natrix.rules.storage_caching import CacheStorageVariableRule
 from natrix.rules.unused_variable import UnusedVariableRule
+from natrix.rules.implicit_export import ImplicitExportRule
+from natrix.rules.unused_arg import UnusedArgRule
 
 rules = [
     Rule(
@@ -50,5 +52,15 @@ rules = [
         name="Unused Variable Check",
         description="Detect when a variable is declared but not used.",
         run=UnusedVariableRule().run,
+    ),
+    Rule(
+        name="Implicit Export Check",
+        description="Detect when the entirety of a module is being exposed using the `__interface__` expression.",
+        run=ImplicitExportRule().run,
+    ),
+    Rule(
+        name="Unused Argument Check",
+        description="Detect when the argument of a function is not being used in its body.",
+        run=UnusedArgRule().run,
     ),
 ]
