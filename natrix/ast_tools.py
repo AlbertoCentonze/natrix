@@ -37,7 +37,7 @@ def vyper_compile(filename, formatting):
     # and have it downloaded and cached on any system.
     # We use the offline mode to allow vyper to run even when the computer is not
     # connected to the internet, if the correct vyper version was already downloaded.
-    command = ["uvx", "--offline", "vyper@0.4.0", "-f", formatting, filename] + paths
+    command = ["uvx", "vyper@0.4.0", "-f", formatting, filename] + paths
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
