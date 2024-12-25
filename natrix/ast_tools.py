@@ -49,7 +49,7 @@ def vyper_compile(filename, formatting):
     except Exception:
         # TODO change error level
         raise Exception(
-            f"Something went wrong when compiling the vyper file. The compiler returned the following error: \n {stderr}"
+            f"Something went wrong when compiling the vyper file '{filename}'. The compiler returned the following error: \n {stderr}"
         )
 
 
