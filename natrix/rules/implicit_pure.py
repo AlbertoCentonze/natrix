@@ -1,3 +1,4 @@
+from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule
 from natrix.rules.storage_analysis import get_memory_accesses
 
@@ -10,7 +11,7 @@ class ImplicitPureRule(BaseRule):
             message="Function '{}' does not access state but is not marked as 'pure'.",
         )
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node: FunctionDefNode):
         if node.is_constructor or "pure" in node.modifiers:
             return
 

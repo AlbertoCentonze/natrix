@@ -1,4 +1,4 @@
-from natrix.ast_node import Node
+from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule
 
 
@@ -20,7 +20,7 @@ class UnusedVariableRule(BaseRule):
             message="Variable '{}' is declared but never used.",
         )
 
-    def visit_FunctionDef(self, node: Node):
+    def visit_FunctionDef(self, node: FunctionDefNode):
         # Gather all assignment-related nodes
         all_assigns = node.get_descendants(
             node_type=("AnnAssign", "Assign", "AugAssign")
