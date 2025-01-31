@@ -32,6 +32,10 @@ class Node:
         return self.ast_type == "FunctionDef" and self.get("name") == "__init__"
 
     @cached_property
+    def is_from_interface(self) -> bool:
+        return self.parent.ast_type == "InterfaceDef"
+
+    @cached_property
     def modifiers(self) -> List[str]:
         # !! this function only returns modifiers that are explicit
         # !! in the source contract
