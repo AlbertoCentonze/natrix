@@ -56,3 +56,8 @@ def unused_import_contract():
 @pytest.fixture()
 def scrvusd_oracle_contract():
     return output_loader("scrvusd_oracle")
+
+
+@pytest.fixture()
+def twocrypto_contract():
+    return output_loader("Twocrypto")
