@@ -1,9 +1,8 @@
 from collections import defaultdict
 from typing import Set
 
-from natrix.ast_node import FunctionDefNode
+from natrix.ast_node import FunctionDefNode, MemoryAccess
 from natrix.rules.common import BaseRule
-from natrix.rules.storage_analysis import MemoryAccess, get_memory_accesses
 
 
 def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
@@ -55,7 +54,7 @@ class CacheStorageVariableRule(BaseRule):
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):
-        accesses = get_memory_accesses(node)
+        accesses = node.memory_accesses
 
         # Analyze accesses for caching suggestions
         issues = analyze_access_patterns(accesses)

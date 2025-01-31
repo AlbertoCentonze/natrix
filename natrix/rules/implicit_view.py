@@ -1,6 +1,5 @@
 from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule
-from natrix.rules.storage_analysis import get_memory_accesses
 
 
 class ImplicitViewRule(BaseRule):
@@ -15,7 +14,7 @@ class ImplicitViewRule(BaseRule):
         if node.is_constructor or "view" in node.modifiers:
             return
 
-        accesses = get_memory_accesses(node)
+        accesses = node.memory_accesses
         read = any(access.type == "read" for access in accesses)
         write = any(access.type == "write" for access in accesses)
 
