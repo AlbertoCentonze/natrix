@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from functools import cached_property
 from typing import List
 
@@ -110,6 +111,13 @@ class Node:
         return obj
 
 
+@dataclass()
+class MemoryAccess:
+    node: Node
+    type: str  # "read" or "write"
+    var: str
+
+
 class FunctionDefNode(Node):
     """
     Specialized AST Node subclass for FunctionDef nodes.
@@ -136,6 +144,37 @@ class FunctionDefNode(Node):
             for decorator in self.get("decorator_list", default=[])
             if "id" in decorator
         ]
+
+    @cached_property
+    def memory_accesses(self) -> List[MemoryAccess]:
+        """
+        Returns all read/write accesses inside this function by scanning for
+        variable_reads/variable_writes in nodes.
+        """
+        # If the node is not actually a FunctionDef, raise:
+        if self.ast_type != "FunctionDef":
+            raise ValueError("Not a function")
+
+        attrs = self.get_descendants("Attribute")
+        if not attrs:
+            return []
+
+        accesses: List[MemoryAccess] = []
+
+        for attr in attrs:
+            for access_type in ("variable_reads", "variable_writes"):
+                if access_type in attr.node_dict:
+                    for item in attr.get(access_type):
+                        accesses.append(
+                            MemoryAccess(
+                                node=attr,
+                                type="read"
+                                if access_type == "variable_reads"
+                                else "write",
+                                var=item.get("name"),
+                            )
+                        )
+        return accesses
 
     def __repr__(self):
         return f"<FunctionDef {self.get('name')}>"
