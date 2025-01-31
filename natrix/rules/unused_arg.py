@@ -1,4 +1,4 @@
-from natrix.ast_node import Node
+from natrix.ast_node import Node, FunctionDefNode
 from natrix.rules.common import BaseRule
 
 
@@ -18,7 +18,7 @@ class UnusedArgRule(BaseRule):
             message="Function '{}' argument '{}' is never used.",
         )
 
-    def visit_FunctionDef(self, node: Node):
+    def visit_FunctionDef(self, node: FunctionDefNode):
         # Collect declared arguments in a dictionary, {arg_name: arg_node}
         declared_args = {}
         for arg_info in node.get("args.args"):

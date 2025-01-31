@@ -1,4 +1,4 @@
-from natrix.ast_node import Node
+from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule
 
 
@@ -11,7 +11,7 @@ class MemoryExpansionRule(BaseRule):
         )
         self.max_frame_size = max_frame_size
 
-    def visit_FunctionDef(self, node: Node):
+    def visit_FunctionDef(self, node: FunctionDefNode):
         # FunctionDef can also appear in inline interfaces,
         # however this rule is not relevant for them.
         if node.is_from_interface:

@@ -1,4 +1,4 @@
-from natrix.ast_node import Node
+from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule
 from natrix.rules.storage_analysis import get_memory_accesses
 
@@ -11,7 +11,7 @@ class ImplicitViewRule(BaseRule):
             message="Function '{}' reads contract state but is not marked as 'view'.",
         )
 
-    def visit_FunctionDef(self, node: Node):
+    def visit_FunctionDef(self, node: FunctionDefNode):
         if node.is_constructor or "view" in node.modifiers:
             return
 

@@ -9,42 +9,33 @@ class Node:
         self.children: List[Node] = []
         self._cache_descendants = None
 
-        # Build children nodes
         self._build_children()
+
+    @classmethod
+    def from_dict(cls, node_dict: dict, parent=None) -> "Node":
+        """
+        Factory method that decides which subclass to instantiate
+        based on the AST node type.
+        """
+        ast_type = node_dict.get("ast_type")
+        if ast_type == "FunctionDef":
+            return FunctionDefNode(node_dict, parent=parent)
+        return cls(node_dict, parent=parent)
 
     def _build_children(self):
         for key, value in self.node_dict.items():
             if isinstance(value, dict) and "ast_type" in value:
-                child_node = Node(value, parent=self)
+                child_node = Node.from_dict(value, parent=self)
                 self.children.append(child_node)
             elif isinstance(value, list):
                 for item in value:
                     if isinstance(item, dict) and "ast_type" in item:
-                        child_node = Node(item, parent=self)
+                        child_node = Node.from_dict(item, parent=self)
                         self.children.append(child_node)
 
     @cached_property
     def ast_type(self):
         return self.get("ast_type")
-
-    @cached_property
-    def is_constructor(self):
-        return self.ast_type == "FunctionDef" and self.get("name") == "__init__"
-
-    @cached_property
-    def is_from_interface(self) -> bool:
-        # TODO not a big fan of this property, should be in parent
-        return self.parent.ast_type == "InterfaceDef"
-
-    @cached_property
-    def modifiers(self) -> List[str]:
-        # !! this function only returns modifiers that are explicit
-        # !! in the source contract
-        if self.ast_type != "FunctionDef":
-            raise ValueError(
-                "Node type is not a FunctionDef so it can't have modifiers"
-            )
-        return [decorator["id"] for decorator in self.get("decorator_list")]
 
     def __repr__(self):
         match self.ast_type:
@@ -52,36 +43,18 @@ class Node:
                 raise ValueError("Node does not have an 'ast_type' attribute.")
             case "Name":
                 return f"<Name {self.get('id')}>"
-            case "FunctionDef":
-                return f"<FunctionDef {self.get('name')}>"
             case "Assign":
                 return f"<{self.get('target.attr')} = {self.get('value.attr')}>"
             case "AnnAssign":
                 return f"<{self.get('target.id')} = {self.get('value.value')}>"
-            # case "AugAssign":
-            # return f"<{}>"
             case _:
                 return f"<Node {self.ast_type}>"
 
-    def get_ancestor(self, node_type=None) -> "Node":
+    def get_ancestor(self, node_type=None) -> "Node | None":
         """
         Return an ancestor node for this node.
-
-        An ancestor is any node which exists within the AST above the given node.
-
-        Parameters
-        ----------
-        node_type : str | tuple, optional
-            A node type or tuple of types. If given, this method checks all
-            ancestor nodes of this node starting with the parent, and returns
-            the first node with a type matching the given value.
-
-        Returns
-        -------
-        Node or None
-            With no arguments given: the parent of this node.
-            With `node_type`: the first matching ancestor node, or `None` if no node
-            is found which matches the argument value.
+        If `node_type` is given, finds the first ancestor whose `ast_type`
+        is that value.
         """
         if node_type is None or self.parent is None:
             return self.parent
@@ -94,29 +67,9 @@ class Node:
 
         return self.parent.get_ancestor(node_type)
 
-    def get_children(self, node_type=None, filters=None, reverse=False):
+    def get_children(self, node_type=None, filters=None, reverse=False) -> List["Node"]:
         """
-        Return a list of children of this node which match the given filter(s).
-
-        Parameters
-        ----------
-        node_type : str | tuple, optional
-            A node type or tuple of types. If given, only child nodes where the
-            `ast_type` matches this value are returned.
-        filters : dict, optional
-            Dictionary of attribute names and expected values. Only nodes that
-            contain the given attributes and match the given values are returned.
-            * You can use dots within the name to check nested attributes.
-              e.g. `{'annotation.func.id': "constant"}`
-            * Expected values may be given as a set; the node must match any one
-              value within the set.
-        reverse : bool, optional
-            If `True`, the order of results is reversed prior to return.
-
-        Returns
-        -------
-        list
-            Child nodes matching the filter conditions.
+        Return immediate children matching the given type/filters.
         """
         return _apply_filters(iter(self.children), node_type, filters, reverse)
 
@@ -124,36 +77,14 @@ class Node:
         self, node_type=None, filters=None, include_self=False, reverse=False
     ) -> List["Node"]:
         """
-        Return a list of descendant nodes of this node which match the given filter(s).
+        Return all descendants matching the given type/filters.
 
         A descendant is any node which exists within the AST beneath the given node.
-
-        Parameters
-        ----------
-        node_type : str | tuple, optional
-            A node type or tuple of types. If given, only descendant nodes where the
-            `ast_type` matches this value are returned.
-        filters : dict, optional
-            Dictionary of attribute names and expected values. Only nodes that
-            contain the given attributes and match the given values are returned.
-            * You can use dots within the name to check nested attributes.
-            * Expected values may be given as a set; the node must match any one
-              value within the set.
-        include_self : bool, optional
-            If True, this node is also included in the search results if it matches
-            the given filter.
-        reverse : bool, optional
-            If `True`, the order of results is reversed prior to return.
-
-        Returns
-        -------
-        list
-            Descendant nodes matching the filter conditions.
         """
         ret = self._get_descendants(include_self)
         return _apply_filters(ret, node_type, filters, reverse)
 
-    def _get_descendants(self, include_self=True):
+    def _get_descendants(self, include_self=True) -> List["Node"]:
         if self._cache_descendants is None:
             nodes = []
             if include_self:
@@ -165,18 +96,8 @@ class Node:
 
     def get(self, field_str, default=None):
         """
-        Recursive getter function for node attributes.
-
-        Parameters
-        ----------
-        field_str : str
-            Attribute string of the location of the value to return.
-
-        Returns
-        -------
-        Any
-            Value at the location of the given field string, if one exists.
-            `None` if the field string is empty or invalid.
+        Safely retrieve nested properties from `node_dict`.
+        `field_str` may include dots to retrieve nested keys.
         """
         obj = self.node_dict
         for key in field_str.split("."):
@@ -189,27 +110,40 @@ class Node:
         return obj
 
 
-def _apply_filters(iterable, node_type=None, filters=None, reverse=False):
+class FunctionDefNode(Node):
     """
-    Filter the given iterable of nodes based on node_type and filters.
+    Specialized AST Node subclass for FunctionDef nodes.
+    Contains properties and logic specific to functions.
+    """
 
-    Parameters
-    ----------
-    iterable : iterator
-        An iterator of Node instances.
-    node_type : str | tuple, optional
-        A node type or tuple of types. If given, only nodes where the
-        `ast_type` matches this value are included.
-    filters : dict, optional
-        Dictionary of attribute names and expected values. Only nodes that
-        contain the given attributes and match the given values are included.
-    reverse : bool, optional
-        If `True`, the order of results is reversed prior to return.
+    @cached_property
+    def is_constructor(self) -> bool:
+        return self.ast_type == "FunctionDef" and self.get("name") == "__init__"
 
-    Returns
-    -------
-    list
-        Nodes that match the given criteria.
+    @cached_property
+    def is_from_interface(self) -> bool:
+        # Checks if the parent node is an InterfaceDef
+        return (self.parent is not None) and (self.parent.ast_type == "InterfaceDef")
+
+    @cached_property
+    def modifiers(self) -> List[str]:
+        """
+        Return a list of Vyper decorators (e.g. "view", "pure", "external") found on this function.
+        """
+        # The compiler attaches them in the "decorator_list" as an array of e.g. {'id': 'view'}
+        return [
+            decorator["id"]
+            for decorator in self.get("decorator_list", default=[])
+            if "id" in decorator
+        ]
+
+    def __repr__(self):
+        return f"<FunctionDef {self.get('name')}>"
+
+
+def _apply_filters(iterable, node_type=None, filters=None, reverse=False) -> List[Node]:
+    """
+    Generic filtering utility for Node lists.
     """
     if node_type is not None:
         if isinstance(node_type, str):

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Set
 
-from natrix.ast_node import Node
+from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule
 from natrix.rules.storage_analysis import MemoryAccess, get_memory_accesses
 
@@ -54,7 +54,7 @@ class CacheStorageVariableRule(BaseRule):
             message="Storage variable '{}' is accessed multiple times; consider caching it to save gas.",
         )
 
-    def visit_FunctionDef(self, node: Node):
+    def visit_FunctionDef(self, node: FunctionDefNode):
         accesses = get_memory_accesses(node)
 
         # Analyze accesses for caching suggestions
