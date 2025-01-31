@@ -12,6 +12,7 @@ class ImplicitInternalRule(BaseRule):
     def visit_FunctionDef(self, node):
         if (
             node.is_constructor
+            or node.is_from_interface
             or "external" in node.modifiers
             or "internal" in node.modifiers
         ):

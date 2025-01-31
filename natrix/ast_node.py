@@ -33,6 +33,7 @@ class Node:
 
     @cached_property
     def is_from_interface(self) -> bool:
+        # TODO not a big fan of this property, should be in parent
         return self.parent.ast_type == "InterfaceDef"
 
     @cached_property

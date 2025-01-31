@@ -12,6 +12,11 @@ class MemoryExpansionRule(BaseRule):
         self.max_frame_size = max_frame_size
 
     def visit_FunctionDef(self, node: Node):
+        # FunctionDef can also appear in inline interfaces,
+        # however this rule is not relevant for them.
+        if node.is_from_interface:
+            return
+
         function_name = node.get("name")
         frame_size = self.compiler_output.get(
             f"metadata.function_info.{function_name}.frame_info.frame_size"
