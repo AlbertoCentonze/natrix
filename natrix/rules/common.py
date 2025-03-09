@@ -24,11 +24,17 @@ class Issue:
     severity: str
     code: str
     message: str
+    source_code: str = None
+    start_position: tuple = None
+    end_position: tuple = None
 
     def cli_format(self):
-        return (
+        result = (
             f"{self.file}:{self.position} {self.severity} {self.code}: {self.message}"
         )
+        if self.source_code:
+            result += f"\n{self.source_code}"
+        return result
 
 
 class RuleRegistry:
@@ -158,22 +164,88 @@ class BaseRule(VyperASTVisitor):
             self.__class__, "MESSAGE", "Generic rule violation"
         )
         self.issues = []
+        self.source_code = None
+        self.file_path = None
 
     def run(self, compiler_output) -> List[Issue]:
         self.issues = []  # reset issues for each run
         self.compiler_output = Node(compiler_output)
+
+        # Get the file path from the compiler output
+        self.file_path = self.compiler_output.get("contract_name")
+
+        # The source code is loaded only once when needed
+        self.source_code = None
+
         self.visit(Node(compiler_output["ast"]))
         return self.issues
+
+    def _load_source_code(self):
+        """Load the source code from the file path if not already loaded."""
+        if (
+            self.source_code is None
+            and self.file_path
+            and os.path.exists(self.file_path)
+        ):
+            try:
+                with open(self.file_path, "r") as f:
+                    self.source_code = f.read()
+            except Exception:
+                self.source_code = None
+        return self.source_code
 
     def add_issue(self, node: Node, *message_args):
         line = node.get("lineno")
         character = node.get("col_offset")
+        end_line = node.get("end_lineno", line)
+        end_character = node.get("end_col_offset", character)
+
+        # Create the position string
+        position = f"{line}:{character}"
+
+        # Get the source code snippet if available
+        source_snippet = None
+        if self._load_source_code():
+            try:
+                # Split the source code into lines
+                lines = self.source_code.splitlines()
+
+                # Get the relevant lines
+                context_lines = 1  # Number of lines to show before and after
+                start_idx = max(0, line - 1 - context_lines)
+                end_idx = min(len(lines), end_line + context_lines)
+
+                # Create the snippet with line numbers
+                snippet_lines = []
+                for i in range(start_idx, end_idx):
+                    line_num = i + 1
+                    prefix = (
+                        "-> " if line_num >= line and line_num <= end_line else "   "
+                    )
+                    snippet_lines.append(f"{prefix}{line_num}: {lines[i]}")
+
+                # Add a caret pointing to the error position if it's a single line error
+                if line == end_line:
+                    caret_line = (
+                        "   " + " " * (len(str(line)) + 2) + " " * character + "^"
+                    )
+                    if end_character > character:
+                        caret_line += "~" * (end_character - character - 1)
+                    snippet_lines.append(caret_line)
+
+                source_snippet = "\n".join(snippet_lines)
+            except Exception:
+                # If anything goes wrong, just don't include the source
+                pass
 
         issue = Issue(
-            file=self.compiler_output.get("contract_name"),
-            position=f"{line}:{character}",
+            file=self.file_path,
+            position=position,
             severity=self.severity,
             code=self.code,
             message=self.message.format(*message_args),
+            source_code=source_snippet,
+            start_position=(line, character),
+            end_position=(end_line, end_character),
         )
         self.issues.append(issue)
