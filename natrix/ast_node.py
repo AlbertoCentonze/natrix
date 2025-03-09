@@ -110,6 +110,37 @@ class Node:
                 return default
         return obj
 
+    @cached_property
+    def module_node(self):
+        """
+        Get the root module node from any node in the AST.
+        """
+        module_node = self
+        while module_node.parent is not None:
+            module_node = module_node.parent
+        return module_node
+
+    @cached_property
+    def immutable_vars(self):
+        """
+        Get all immutable variables from the module.
+
+        Returns:
+            set: A set of variable names that are declared as immutable.
+        """
+        # Find all variable declarations in the module
+        var_decls = self.module_node.get_descendants(node_type="VariableDecl")
+
+        # Extract immutable variables
+        immutable_vars = set()
+        for decl in var_decls:
+            if decl.get("is_immutable") is True:
+                var_name = decl.get("target.id")
+                if var_name:
+                    immutable_vars.add(var_name)
+
+        return immutable_vars
+
 
 @dataclass()
 class MemoryAccess:
@@ -155,19 +186,20 @@ class FunctionDefNode(Node):
         if self.ast_type != "FunctionDef":
             raise ValueError("Not a function")
 
-        attrs = self.get_descendants("Attribute")
-        if not attrs:
+        # Get all nodes that might have variable_reads or variable_writes
+        all_nodes = self.get_descendants()
+        if not all_nodes:
             return []
 
         accesses: List[MemoryAccess] = []
 
-        for attr in attrs:
+        for node in all_nodes:
             for access_type in ("variable_reads", "variable_writes"):
-                if access_type in attr.node_dict:
-                    for item in attr.get(access_type):
+                if access_type in node.node_dict:
+                    for item in node.get(access_type):
                         accesses.append(
                             MemoryAccess(
-                                node=attr,
+                                node=node,
                                 type="read"
                                 if access_type == "variable_reads"
                                 else "write",

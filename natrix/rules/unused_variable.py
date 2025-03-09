@@ -56,7 +56,17 @@ class UnusedVariableRule(BaseRule):
             if name.get("node_id") not in assigned_var_node_ids:
                 used_var_names.add(name.get("id"))
 
+        # Check if this is a constructor function using the built-in property
+        is_constructor = node.is_constructor
+
+        # Get immutable variables if this is a constructor
+        immutable_vars = node.immutable_vars if is_constructor else set()
+
         # Any remaining variable in assigned_var_nodes is unused
         for var_name, assign_node in assigned_var_nodes.items():
+            # Skip immutable variables in constructor
+            if is_constructor and var_name in immutable_vars:
+                continue
+
             if var_name not in used_var_names:
                 self.add_issue(assign_node, var_name)
