@@ -26,12 +26,18 @@ def lint_file(file_path, disabled_rules: Set[str] = None):
     rules = RuleRegistry.get_rules()
 
     # flatmaps the issues from all rules and filter out disabled rules
-    issues = [
-        issue
-        for rule in rules
-        for issue in rule.run(ast)
-        if issue.code not in disabled_rules
-    ]
+    issues = []
+    for rule in rules:
+        try:
+            rule_issues = rule.run(ast)
+            issues.extend(
+                [issue for issue in rule_issues if issue.code not in disabled_rules]
+            )
+        except Exception as e:
+            # Simple error message with suggestion to report the issue
+            print(
+                f"Error running a rule: {str(e)}. Please report this issue on GitHub."
+            )
 
     for issue in issues:
         print(issue.cli_format())
