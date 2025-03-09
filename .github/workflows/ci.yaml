@@ -50,9 +50,11 @@ jobs:
       - name: Install natrix as module
         run: uv pip install .
 
-      # Install Vyper 0.4.0
       - name: Install Vyper
         run: uv pip install vyper==0.4.0
+
+      - name: Install snekmate
+        run: uv pip install snekmate==0.1.0
 
       # Run tests with environment variables
       - name: Run Tests with Python ${{ matrix.python-version }}
