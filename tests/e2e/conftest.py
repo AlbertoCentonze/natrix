@@ -14,12 +14,12 @@ def all_contracts(
 ):
     # each item maps contract filename to the number of expected issues
     return [
-        [fee_splitter_contract, 14],
-        [scrvusd_oracle_contract, 35],
-        [snekmate01_ownable_contract, 1],
+        [fee_splitter_contract, 21],
+        [scrvusd_oracle_contract, 47],
+        [snekmate01_ownable_contract, 3],
         [twa_contract, 7],
-        [twocrypto_contract, 122],
+        [twocrypto_contract, 207],
         [uncached_contract, 7],
-        [unused_import_contract, 7],
+        [unused_import_contract, 11],
         [dummy_version_contract, 9],
     ]
