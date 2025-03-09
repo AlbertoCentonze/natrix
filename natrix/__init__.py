@@ -39,7 +39,10 @@ def lint_file(file_path, disabled_rules: Set[str] = None):
                 f"Error running a rule: {str(e)}. Please report this issue on GitHub."
             )
 
-    for issue in issues:
+    # Print issues with spacing between them
+    for i, issue in enumerate(issues):
+        if i > 0:  # Add a blank line between issues
+            print()
         print(issue.cli_format())
 
     return bool(issues)

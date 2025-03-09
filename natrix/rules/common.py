@@ -29,11 +29,36 @@ class Issue:
     end_position: tuple = None
 
     def cli_format(self):
+        # ANSI color codes
+        RED = "\033[31m"
+        YELLOW = "\033[33m"
+        BLUE = "\033[34m"
+        CYAN = "\033[36m"
+        BOLD = "\033[1m"
+        RESET = "\033[0m"
+
+        # Color the severity based on its level
+        severity_color = YELLOW
+        if self.severity.lower() == "error":
+            severity_color = RED
+        elif self.severity.lower() == "important":
+            severity_color = RED
+        elif self.severity.lower() == "style":
+            severity_color = BLUE
+
+        # Format the main error message with colors
         result = (
-            f"{self.file}:{self.position} {self.severity} {self.code}: {self.message}"
+            f"{BOLD}{self.file}:{self.position}{RESET} "
+            f"{severity_color}{self.severity}{RESET} "
+            f"{CYAN}{self.code}{RESET}: {self.message}"
         )
+
+        # Add the source code snippet if available
         if self.source_code:
-            result += f"\n{self.source_code}"
+            # Replace the arrow markers with colored ones
+            colored_source = self.source_code.replace("-> ", f"{RED}{BOLD}-> {RESET}")
+            result += f"\n\n{colored_source}\n"
+
         return result
 
 
