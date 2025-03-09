@@ -1,4 +1,4 @@
-from natrix.rules import UnusedArgRule
+from natrix.rules.unused_arg import UnusedArgRule
 
 
 def test_unused_argument(unused_import_contract):

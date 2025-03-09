@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Set
 
 from natrix.ast_node import FunctionDefNode, MemoryAccess
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
 def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
@@ -45,12 +45,22 @@ def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
     return suggestions
 
 
+@RuleRegistry.register
 class CacheStorageVariableRule(BaseRule):
+    """
+    Variable Caching Check
+
+    Detect when a variable is accessed multiple times in a function and suggest caching it.
+    """
+
+    CODE = "NTX7"
+    MESSAGE = "Storage variable '{}' is accessed multiple times; consider caching it to save gas."
+
     def __init__(self):
         super().__init__(
             severity="optimization",
-            code="NTX7",
-            message="Storage variable '{}' is accessed multiple times; consider caching it to save gas.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):

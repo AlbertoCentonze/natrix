@@ -1,14 +1,23 @@
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class ConstantNamingRule(BaseRule):
-    def __init__(self, max_frame_size=20_000):
+    """
+    Constant Naming Check
+
+    Detect when a constant is not named in UPPER_SNAKE_CASE.
+    """
+
+    CODE = "NTX2"
+    MESSAGE = "Constant '{}' should be named in UPPER_SNAKE_CASE"
+
+    def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX2",
-            message="Constant '{}' should be named in UPPER_SNAKE_CASE",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
-        self.max_frame_size = max_frame_size
 
     def visit_VariableDecl(self, node):
         if not node.get("is_constant"):

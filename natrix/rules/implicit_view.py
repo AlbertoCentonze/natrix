@@ -1,13 +1,23 @@
 from natrix.ast_node import FunctionDefNode
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class ImplicitViewRule(BaseRule):
+    """
+    Implicit View Decorator Check
+
+    Detect when view functions are missing the '@view' decorator.
+    """
+
+    CODE = "NTX4"
+    MESSAGE = "Function '{}' reads contract state but is not marked as 'view'."
+
     def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX4",
-            message="Function '{}' reads contract state but is not marked as 'view'.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):

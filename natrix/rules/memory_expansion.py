@@ -1,13 +1,25 @@
 from natrix.ast_node import FunctionDefNode
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class MemoryExpansionRule(BaseRule):
+    """
+    Memory Expansion Check
+
+    Detect when memory expansion is too big compared to the specified threshold.
+    This can be useful to spot when dynarrays with a large number of elements
+    are being passed by value.
+    """
+
+    CODE = "NTX1"
+    MESSAGE = "Function '{}' has a large frame size of {} bytes."
+
     def __init__(self, max_frame_size=20_000):
         super().__init__(
             severity="warning",
-            code="NTX1",
-            message="Function '{}' has a large frame size of {} bytes.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
         self.max_frame_size = max_frame_size
 

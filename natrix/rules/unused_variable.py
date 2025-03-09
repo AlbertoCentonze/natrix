@@ -1,9 +1,12 @@
 from natrix.ast_node import FunctionDefNode
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class UnusedVariableRule(BaseRule):
     """
+    Unused Variable Check
+
     Detects variables that are declared (via assignments like Assign, AnnAssign, and AugAssign)
     but never actually referenced (via Name nodes) within a function. It matches each declared
     variable to its assignment node and checks if it appears in any Name node usages.
@@ -13,11 +16,14 @@ class UnusedVariableRule(BaseRule):
             unused_var: uint256 = 42  # This line will be reported.
     """
 
+    CODE = "NTX8"
+    MESSAGE = "Variable '{}' is declared but never used."
+
     def __init__(self):
         super().__init__(
             severity="warning",
-            code="NTX8",
-            message="Variable '{}' is declared but never used.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):
