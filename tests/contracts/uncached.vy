@@ -1,6 +1,11 @@
+owner: public(immutable(address))
 a: uint256
 b: public(address)
 c: address
+
+@deploy
+def __init__(_owner: address):
+    owner = _owner
 
 def not_caching_a_thing() -> uint256:
     hey_unused_var: uint256 = 1
