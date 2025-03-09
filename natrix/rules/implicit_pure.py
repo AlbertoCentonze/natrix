@@ -6,7 +6,7 @@ class ImplicitPureRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX005",
+            code="NTX5",
             message="Function '{}' does not access state but is not marked as 'pure'.",
         )
 

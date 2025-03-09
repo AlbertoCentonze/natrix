@@ -16,7 +16,7 @@ class UnusedVariableRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="warning",
-            code="NTX008",
+            code="NTX8",
             message="Variable '{}' is declared but never used.",
         )
 

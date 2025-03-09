@@ -49,7 +49,7 @@ class CacheStorageVariableRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="optimization",
-            code="NTX007",
+            code="NTX7",
             message="Storage variable '{}' is accessed multiple times; consider caching it to save gas.",
         )
 

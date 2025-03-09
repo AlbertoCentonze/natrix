@@ -6,7 +6,7 @@ class PrintLeftRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="warning",
-            code="NTX006",
+            code="NTX6",
             message="Found a 'print' statement; consider removing it in production code.",
         )
 

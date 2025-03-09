@@ -5,7 +5,7 @@ class ImplicitExportRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="important",
-            code="NTX00TODO",
+            code="NTX9",
             message="Module '{}' is exposing all its functions. Consider exporting them one by one to make"
             "the contract more explicit.",
         )
