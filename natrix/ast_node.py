@@ -186,19 +186,20 @@ class FunctionDefNode(Node):
         if self.ast_type != "FunctionDef":
             raise ValueError("Not a function")
 
-        attrs = self.get_descendants("Attribute")
-        if not attrs:
+        # Get all nodes that might have variable_reads or variable_writes
+        all_nodes = self.get_descendants()
+        if not all_nodes:
             return []
 
         accesses: List[MemoryAccess] = []
 
-        for attr in attrs:
+        for node in all_nodes:
             for access_type in ("variable_reads", "variable_writes"):
-                if access_type in attr.node_dict:
-                    for item in attr.get(access_type):
+                if access_type in node.node_dict:
+                    for item in node.get(access_type):
                         accesses.append(
                             MemoryAccess(
-                                node=attr,
+                                node=node,
                                 type="read"
                                 if access_type == "variable_reads"
                                 else "write",
