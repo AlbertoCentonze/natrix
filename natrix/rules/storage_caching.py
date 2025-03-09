@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Set
 
 from natrix.ast_node import FunctionDefNode, MemoryAccess
-from natrix.rules.common import BaseRule, RuleRegistry
+from natrix.rules.common import BaseRule
 
 
 def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
