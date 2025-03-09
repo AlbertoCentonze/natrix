@@ -9,6 +9,7 @@ from natrix.rules.storage_caching import CacheStorageVariableRule
 from natrix.rules.unused_variable import UnusedVariableRule
 from natrix.rules.implicit_export import ImplicitExportRule
 from natrix.rules.unused_arg import UnusedArgRule
+from natrix.rules.arg_naming_convention import ArgNamingConventionRule
 
 rules = [
     Rule(
@@ -62,5 +63,10 @@ rules = [
         name="Unused Argument Check",
         description="Detect when the argument of a function is not being used in its body.",
         run=UnusedArgRule().run,
+    ),
+    Rule(
+        name="Argument Naming Convention Check",
+        description="Detect when function arguments don't follow the specified naming convention pattern.",
+        run=ArgNamingConventionRule(pattern=r"^_").run,
     ),
 ]
