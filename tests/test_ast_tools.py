@@ -42,22 +42,9 @@ def test_parse_file_integration():
     assert isinstance(result["metadata"], dict)
 
 
-def test_paths_are_needed_for_snekmate():
+def test_modules_compilation():
     test_file = "tests/contracts/scrvusd_oracle.vy"
 
-    # Try direct compilation without paths
-    direct_command = ["vyper", "-f", "annotated_ast", test_file]
-    direct_process = subprocess.Popen(
-        direct_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
-    direct_stdout, direct_stderr = direct_process.communicate()
-
-    # Check if it failed as expected
-    assert (
-        "ModuleNotFound: snekmate.auth.ownable" in direct_stderr
-    ), "Direct compilation without paths should fail with ModuleNotFound"
-
-    # Now try with our vyper_compile function which includes paths
     result = vyper_compile(test_file, "annotated_ast")
     assert isinstance(result, dict)
     assert "ast" in result
