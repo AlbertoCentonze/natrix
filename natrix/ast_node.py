@@ -110,6 +110,37 @@ class Node:
                 return default
         return obj
 
+    @cached_property
+    def module_node(self):
+        """
+        Get the root module node from any node in the AST.
+        """
+        module_node = self
+        while module_node.parent is not None:
+            module_node = module_node.parent
+        return module_node
+
+    @cached_property
+    def immutable_vars(self):
+        """
+        Get all immutable variables from the module.
+
+        Returns:
+            set: A set of variable names that are declared as immutable.
+        """
+        # Find all variable declarations in the module
+        var_decls = self.module_node.get_descendants(node_type="VariableDecl")
+
+        # Extract immutable variables
+        immutable_vars = set()
+        for decl in var_decls:
+            if decl.get("is_immutable") is True:
+                var_name = decl.get("target.id")
+                if var_name:
+                    immutable_vars.add(var_name)
+
+        return immutable_vars
+
 
 @dataclass()
 class MemoryAccess:
