@@ -32,12 +32,15 @@ class UnusedVariableRule(BaseRule):
             node_type=("AnnAssign", "Assign", "AugAssign")
         )
 
-        # Collect the assigned variable names, excluding None, and map them to their assignment nodes
+        # Collect the assigned variable names, excluding None, and map them to their declaration nodes
+        # For each variable, we want to keep track of its first declaration (AnnAssign) if available
         assigned_var_nodes = {}
         for assign in all_assigns:
             var_name = assign.get("target.id")
             if var_name is not None:
-                assigned_var_nodes[var_name] = assign
+                # If this is an AnnAssign (declaration) or we haven't seen this variable before, store it
+                if assign.ast_type == "AnnAssign" or var_name not in assigned_var_nodes:
+                    assigned_var_nodes[var_name] = assign
 
         # Gather the node IDs for these assignments
         assigned_var_node_ids = [assign.get("target.node_id") for assign in all_assigns]
@@ -56,7 +59,29 @@ class UnusedVariableRule(BaseRule):
             if name.get("node_id") not in assigned_var_node_ids:
                 used_var_names.add(name.get("id"))
 
+        # Collect all for loop target variables and map them to their correct nodes
+        for_loop_targets = {}
+        for_loops = node.get_descendants(node_type="For")
+        for for_loop in for_loops:
+            target_name = for_loop.get("target.target.id")
+            if target_name is not None:
+                # Find the Name node with the correct id and position
+                target_nodes = for_loop.get_descendants(
+                    node_type="Name", filters={"id": target_name}
+                )
+                if target_nodes:
+                    # Use the first matching Name node
+                    for_loop_targets[target_name] = target_nodes[0]
+
         # Any remaining variable in assigned_var_nodes is unused
         for var_name, assign_node in assigned_var_nodes.items():
+            # Skip reporting if the variable is named '_' and is a for loop target
+            if var_name == "_" and var_name in for_loop_targets:
+                continue
+
             if var_name not in used_var_names:
-                self.add_issue(assign_node, var_name)
+                # If this is a for loop variable, use the correct node for the position
+                if var_name in for_loop_targets:
+                    self.add_issue(for_loop_targets[var_name], var_name)
+                else:
+                    self.add_issue(assign_node, var_name)

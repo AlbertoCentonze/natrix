@@ -61,3 +61,8 @@ def scrvusd_oracle_contract():
 @pytest.fixture()
 def twocrypto_contract():
     return output_loader("Twocrypto")
+
+
+@pytest.fixture()
+def for_loop_underscore_contract():
+    return output_loader("for_loop_underscore")
