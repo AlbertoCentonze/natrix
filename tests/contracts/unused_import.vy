@@ -42,10 +42,10 @@ def _set_some_addy(new_addy: address):
     self.some_addy = new_addy
 
 @external
-def set_some_addy(new_addy: address):
-    assert new_addy != convert(42, address)
+def set_some_addy(_new_addy: address):
+    assert _new_addy != convert(42, address)
 
-    self._set_some_addy(new_addy)
+    self._set_some_addy(_new_addy)
 
 @external
 def set_some_addy_alt(new_addy: address, unused_arg: uint256):
