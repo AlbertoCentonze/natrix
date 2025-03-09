@@ -5,7 +5,7 @@ class ConstantNamingRule(BaseRule):
     def __init__(self, max_frame_size=20_000):
         super().__init__(
             severity="style",
-            code="NTX002",
+            code="NTX2",
             message="Constant '{}' should be named in UPPER_SNAKE_CASE",
         )
         self.max_frame_size = max_frame_size

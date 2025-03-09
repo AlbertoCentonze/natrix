@@ -6,7 +6,7 @@ class ImplicitInternalRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX003",
+            code="NTX3",
             message="Internal function '{}' is missing the '@internal' decorator.",
         )
 

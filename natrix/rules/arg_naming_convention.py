@@ -14,7 +14,7 @@ class ArgNamingConventionRule(BaseRule):
     def __init__(self, pattern):
         super().__init__(
             severity="warning",
-            code="NTX00NAMING",
+            code="NTX11",
             message="Function '{}' argument '{}' does not match the naming convention pattern '{}'.",
         )
         self.pattern = re.compile(pattern)

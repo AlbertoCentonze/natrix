@@ -6,7 +6,7 @@ class ImplicitViewRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX004",
+            code="NTX4",
             message="Function '{}' reads contract state but is not marked as 'view'.",
         )
 

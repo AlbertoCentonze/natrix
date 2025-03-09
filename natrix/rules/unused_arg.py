@@ -14,7 +14,7 @@ class UnusedArgRule(BaseRule):
     def __init__(self):
         super().__init__(
             severity="warning",
-            code="NTX00TODO",
+            code="NTX10",
             message="Function '{}' argument '{}' is never used.",
         )
 
