@@ -1,6 +1,7 @@
 import sys
 import os
 import argparse
+from typing import Set
 import inspect
 
 # Import tomllib for Python 3.11+ or tomli for earlier versions
@@ -14,11 +15,19 @@ from natrix.rules import rules
 from natrix.ast_tools import parse_file
 
 
-def lint_file(file_path):
+def lint_file(file_path, disabled_rules: Set[str] = None):
     ast = parse_file(file_path)
 
-    # flatmaps the issues from all rules
-    issues = [issue for rule in rules for issue in rule.run(ast)]
+    if disabled_rules is None:
+        disabled_rules = set()
+
+    # flatmaps the issues from all rules and filter out disabled rules
+    issues = [
+        issue
+        for rule in rules
+        for issue in rule.run(ast)
+        if issue.code not in disabled_rules
+    ]
 
     for issue in issues:
         print(issue.cli_format())
@@ -61,7 +70,7 @@ def get_project_root():
 
 def read_pyproject_config():
     """Read configurations from pyproject.toml if it exists"""
-    config = {"files": []}
+    config = {"files": [], "disabled_rules": set()}
 
     try:
         # Find the project root directory
@@ -81,6 +90,10 @@ def read_pyproject_config():
                             os.path.normpath(os.path.join(project_root, path))
                             for path in natrix_config["files"]
                         ]
+                    if "disabled_rules" in natrix_config and isinstance(
+                        natrix_config["disabled_rules"], list
+                    ):
+                        config["disabled_rules"] = set(natrix_config["disabled_rules"])
     except Exception as e:
         print(f"Warning: Error reading pyproject.toml: {e}")
 
@@ -96,6 +109,12 @@ def parse_args():
         help="Path(s) to vyper file(s) or directory/directories to lint. If not provided, all vyper files in current directory are checked.",
     )
     parser.add_argument("--version", action="store_true", help="Show version and exit.")
+    parser.add_argument(
+        "--disable",
+        type=str,
+        nargs="+",
+        help="List of rule codes to disable (e.g., --disable NTX003 NTX007).",
+    )
     return parser.parse_args()
 
 
@@ -103,6 +122,11 @@ def main():
     args = parse_args()
     config = read_pyproject_config()
     issues_found = False
+
+    # Combine disabled rules from command line and config file
+    disabled_rules = config["disabled_rules"]
+    if args.disable:
+        disabled_rules.update(args.disable)
 
     if args.version:
         print(__version__)
@@ -133,7 +157,7 @@ def main():
             print("No valid .vy files to lint.")
             sys.exit(1)
 
-        issues = [lint_file(file) for file in all_vy_files]
+        issues = [lint_file(file, disabled_rules) for file in all_vy_files]
         issues_found = any(issues)
     else:
         # If no paths are provided, search for .vy files in the current directory recursively
@@ -143,7 +167,7 @@ def main():
             print("No .vy files found in the current directory.")
             sys.exit(1)
 
-        issues = [lint_file(file) for file in vy_files]
+        issues = [lint_file(file, disabled_rules) for file in vy_files]
         issues_found = any(issues)
 
     if issues_found:
