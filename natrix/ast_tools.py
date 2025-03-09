@@ -1,9 +1,35 @@
 import ast
 import os
 import subprocess
-
 import json
+import re
 from natrix.ast_node import Node
+
+VYPER_VERSION = "0.4.0"
+
+
+def _check_vyper_version():
+    """
+    Check if vyper is installed and at the required version.
+    Raises an exception if vyper is not available or not at the correct version.
+    """
+    try:
+        result = subprocess.run(["vyper", "--version"], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception("Vyper compiler not available")
+
+        # Extract version number
+        version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+        if not version_match:
+            raise Exception("Could not determine Vyper version")
+
+        version = version_match.group(1)
+        if version != VYPER_VERSION:
+            raise Exception(f"Vyper version must be {VYPER_VERSION}, found {version}")
+    except FileNotFoundError:
+        raise Exception(
+            f"Vyper compiler not found. Please ensure Vyper {VYPER_VERSION} is installed and available in your PATH."
+        )
 
 
 def _obtain_sys_path():
@@ -30,14 +56,11 @@ def _obtain_sys_path():
 
 
 def vyper_compile(filename, formatting):
+    _check_vyper_version()
+
     # For each path add a '-p /the/path' flag to the compiler
     paths = [item for p in _obtain_sys_path() for item in ["-p", p]]
-
-    # We run vyper from 'uv tool'. This allows us to easily switch the compiler version
-    # and have it downloaded and cached on any system.
-    # We use the offline mode to allow vyper to run even when the computer is not
-    # connected to the internet, if the correct vyper version was already downloaded.
-    command = ["uvx", "vyper@0.4.0", "-f", formatting, filename] + paths
+    command = ["vyper", "-f", formatting, filename] + paths
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
