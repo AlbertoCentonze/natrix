@@ -1,8 +1,8 @@
 import sys
 import os
 import argparse
+import re
 from typing import Set
-import inspect
 
 # Import tomllib for Python 3.11+ or tomli for earlier versions
 try:
@@ -11,15 +11,19 @@ except ImportError:
     import tomli as tomllib
 
 from natrix.__version__ import __version__
-from natrix.rules import rules
 from natrix.ast_tools import parse_file
+from natrix.rules.common import RuleRegistry
 
 
 def lint_file(file_path, disabled_rules: Set[str] = None):
+    """Lint a single Vyper file with the given rules configuration."""
     ast = parse_file(file_path)
 
     if disabled_rules is None:
         disabled_rules = set()
+
+    # Get the rule instances (already instantiated once at startup)
+    rules = RuleRegistry.get_rules()
 
     # flatmaps the issues from all rules and filter out disabled rules
     issues = [
@@ -51,26 +55,19 @@ def get_project_root():
     """Get the project root directory, which contains the pyproject.toml file."""
     # First try to find it from the current working directory upwards
     current_dir = os.path.abspath(os.getcwd())
-    while current_dir != os.path.dirname(current_dir):  # Stop at root directory
+
+    while current_dir != os.path.dirname(current_dir):  # Stop at root
         if os.path.exists(os.path.join(current_dir, "pyproject.toml")):
             return current_dir
         current_dir = os.path.dirname(current_dir)
 
-    # If not found, try to find it based on the module directory
-    module_dir = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe()))
-    )
-    root_dir = os.path.dirname(module_dir)  # Go one level up from the module directory
-    if os.path.exists(os.path.join(root_dir, "pyproject.toml")):
-        return root_dir
-
-    # If still not found, return the current directory as a fallback
+    # If not found, default to the current directory
     return os.getcwd()
 
 
 def read_pyproject_config():
     """Read configurations from pyproject.toml if it exists"""
-    config = {"files": [], "disabled_rules": set()}
+    config = {"files": [], "disabled_rules": set(), "rule_configs": {}}
 
     try:
         # Find the project root directory
@@ -94,6 +91,11 @@ def read_pyproject_config():
                         natrix_config["disabled_rules"], list
                     ):
                         config["disabled_rules"] = set(natrix_config["disabled_rules"])
+                    # Parse rule configurations
+                    if "rule_configs" in natrix_config and isinstance(
+                        natrix_config["rule_configs"], dict
+                    ):
+                        config["rule_configs"] = natrix_config["rule_configs"]
     except Exception as e:
         print(f"Warning: Error reading pyproject.toml: {e}")
 
@@ -118,37 +120,95 @@ def parse_args():
         nargs="+",
         help="List of rule codes to disable (e.g., --disable NTX003 NTX007).",
     )
+    parser.add_argument(
+        "-c",
+        "--rule-config",
+        action="append",
+        help="Configure rules with format 'RuleName.param=value'. Can be used multiple times. Example: ArgNamingConvention.pattern=^_",
+    )
+    parser.add_argument(
+        "-l",
+        "--list-rules",
+        action="store_true",
+        help="List all available rules with their descriptions.",
+    )
     return parser.parse_args()
 
 
 def main():
+    """Main entry point for the linter."""
     args = parse_args()
-    config = read_pyproject_config()
-    issues_found = False
 
-    # Combine disabled rules from command line and config file
-    disabled_rules = config["disabled_rules"]
+    if args.version:
+        print(f"natrix v{__version__}")
+        sys.exit(0)
+
+    # Ensure all rules are discovered
+    RuleRegistry.discover_rules()
+
+    if args.list_rules:
+        print("Available rules:")
+        rule_classes = RuleRegistry.get_rule_classes()
+        for rule_name, rule_class in sorted(rule_classes.items()):
+            doc = rule_class.__doc__ or ""
+            doc_lines = doc.splitlines()
+            description = doc_lines[0].strip() if doc_lines else "No description"
+            print(f"  {rule_name}: {description}")
+        sys.exit(0)
+
+    # Parse rule configurations from CLI
+    rule_configs = {}
+    if args.rule_config:
+        for config_str in args.rule_config:
+            try:
+                rule_param, value = config_str.split("=", 1)
+                rule_name, param = rule_param.split(".", 1)
+
+                # Convert value to appropriate type if possible
+                if value.lower() == "true":
+                    value = True
+                elif value.lower() == "false":
+                    value = False
+                elif value.isdigit():
+                    value = int(value)
+                elif re.match(r"^\d+\.\d+$", value):
+                    value = float(value)
+
+                # Initialize rule configuration dictionary if it doesn't exist
+                if rule_name not in rule_configs:
+                    rule_configs[rule_name] = {}
+
+                rule_configs[rule_name][param] = value
+            except ValueError:
+                print(f"Invalid rule configuration format: {config_str}")
+                print("Expected format: RuleName.param=value")
+                sys.exit(1)
+
+    # Read config from pyproject.toml
+    pyproject_config = read_pyproject_config()
+
+    # Merge configurations, with CLI taking precedence
+    merged_rule_configs = pyproject_config.get("rule_configs", {}).copy()
+    for rule_name, params in rule_configs.items():
+        if rule_name not in merged_rule_configs:
+            merged_rule_configs[rule_name] = {}
+        merged_rule_configs[rule_name].update(params)
+
+    # Initialize rules once with the merged configurations
+    RuleRegistry.get_rules(merged_rule_configs)
+
+    # Combine disabled rules from CLI and pyproject.toml
+    disabled_rules = pyproject_config["disabled_rules"]
     if args.disable:
         disabled_rules.update(args.disable)
 
-    if args.version:
-        print(__version__)
-        sys.exit(0)
-
-    files_to_check = args.files
-
-    # If no command-line files specified, use files from pyproject.toml
-    if not files_to_check and config["files"]:
-        files_to_check = config["files"]
-
-    if files_to_check:
+    # Handle files
+    if args.files:
         all_vy_files = []
-        for path in files_to_check:
+        for path in args.files:
             if os.path.isfile(path) and path.endswith(".vy"):
-                # If a specific .vy file is provided
                 all_vy_files.append(path)
             elif os.path.isdir(path):
-                # If a directory is provided, find all .vy files in it
                 dir_vy_files = find_vy_files(path)
                 if not dir_vy_files:
                     print(f"No .vy files found in the directory: {path}")

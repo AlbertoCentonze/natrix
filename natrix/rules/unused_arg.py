@@ -1,9 +1,12 @@
 from natrix.ast_node import Node, FunctionDefNode
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class UnusedArgRule(BaseRule):
     """
+    Unused Argument Check
+
     Detects arguments that are declared but never used within a function.
 
     Example:
@@ -11,11 +14,14 @@ class UnusedArgRule(BaseRule):
             pass
     """
 
+    CODE = "NTX10"
+    MESSAGE = "Function '{}' argument '{}' is never used."
+
     def __init__(self):
         super().__init__(
             severity="warning",
-            code="NTX10",
-            message="Function '{}' argument '{}' is never used.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):

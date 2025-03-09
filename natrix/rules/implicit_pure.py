@@ -1,13 +1,23 @@
 from natrix.ast_node import FunctionDefNode
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class ImplicitPureRule(BaseRule):
+    """
+    Implicit Pure Decorator Check
+
+    Detect when pure functions are missing the '@pure' decorator.
+    """
+
+    CODE = "NTX5"
+    MESSAGE = "Function '{}' does not access state but is not marked as 'pure'."
+
     def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX5",
-            message="Function '{}' does not access state but is not marked as 'pure'.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):

@@ -1,4 +1,4 @@
-from natrix.rules import ConstantNamingRule
+from natrix.rules.constants_naming import ConstantNamingRule
 
 
 def test_fee_splitter_version_underscore(fee_splitter_contract):

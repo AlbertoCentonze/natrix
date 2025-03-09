@@ -1,4 +1,4 @@
-from natrix.rules import MemoryExpansionRule
+from natrix.rules.memory_expansion import MemoryExpansionRule
 
 
 def test_fee_splitter_dispatch_fees(fee_splitter_contract):

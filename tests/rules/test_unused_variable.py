@@ -1,4 +1,4 @@
-from natrix.rules import UnusedVariableRule
+from natrix.rules.unused_variable import UnusedVariableRule
 
 
 def test_unused_variable(uncached_contract):

@@ -1,13 +1,23 @@
 from natrix.ast_node import FunctionDefNode
-from natrix.rules.common import BaseRule
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
+@RuleRegistry.register
 class ImplicitInternalRule(BaseRule):
+    """
+    Implicit Internal Decorator Check
+
+    Detect when internal functions are missing the '@internal' decorator.
+    """
+
+    CODE = "NTX3"
+    MESSAGE = "Internal function '{}' is missing the '@internal' decorator."
+
     def __init__(self):
         super().__init__(
             severity="style",
-            code="NTX3",
-            message="Internal function '{}' is missing the '@internal' decorator.",
+            code=self.CODE,
+            message=self.MESSAGE,
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):
