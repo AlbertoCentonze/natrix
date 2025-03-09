@@ -73,10 +73,20 @@ class UnusedVariableRule(BaseRule):
                     # Use the first matching Name node
                     for_loop_targets[target_name] = target_nodes[0]
 
+        # Check if this is a constructor function using the built-in property
+        is_constructor = node.is_constructor
+
+        # Get immutable variables if this is a constructor
+        immutable_vars = node.immutable_vars if is_constructor else set()
+
         # Any remaining variable in assigned_var_nodes is unused
         for var_name, assign_node in assigned_var_nodes.items():
             # Skip reporting if the variable is named '_' and is a for loop target
             if var_name == "_" and var_name in for_loop_targets:
+                continue
+
+            # Skip immutable variables in constructor
+            if is_constructor and var_name in immutable_vars:
                 continue
 
             if var_name not in used_var_names:
