@@ -108,8 +108,11 @@ def parse_args():
         nargs="*",
         help="Path(s) to vyper file(s) or directory/directories to lint. If not provided, all vyper files in current directory are checked.",
     )
-    parser.add_argument("--version", action="store_true", help="Show version and exit.")
     parser.add_argument(
+        "-v", "--version", action="store_true", help="Show version and exit."
+    )
+    parser.add_argument(
+        "-d",
         "--disable",
         type=str,
         nargs="+",
