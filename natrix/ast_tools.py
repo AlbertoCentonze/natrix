@@ -5,7 +5,7 @@ import json
 import re
 from natrix.ast_node import Node
 
-VYPER_VERSION = "0.4.0"
+VYPER_VERSION = "0.4.1"
 
 
 def _check_vyper_version():
