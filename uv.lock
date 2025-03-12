@@ -239,6 +239,15 @@ wheels = [
 ]
 
 [[package]]
+name = "lark"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/af/60/bc7622aefb2aee1c0b4ba23c1446d3e30225c8770b38d7aedbfb65ca9d5a/lark-1.2.2.tar.gz", hash = "sha256:ca807d0162cd16cef15a8feecb862d7319e7a09bdb13aef927968e45040fed80", size = 252132 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2d/00/d90b10b962b4277f5e64a78b6609968859ff86889f5b898c1a778c06ec00/lark-1.2.2-py3-none-any.whl", hash = "sha256:c2276486b02f0f1b90be155f2c8ba4a8e194d42775786db622faccd652d8e80c", size = 111036 },
+]
+
+[[package]]
 name = "markdown"
 version = "3.8"
 source = { registry = "https://pypi.org/simple" }
@@ -410,8 +419,8 @@ dev = [
     { name = "mkdocs-material", specifier = ">=9.5.26" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-xdist", specifier = ">=3.6.1" },
-    { name = "snekmate", specifier = "==0.1.0" },
-    { name = "vyper", specifier = "==0.4.0" },
+    { name = "snekmate", specifier = "==0.1.1" },
+    { name = "vyper", specifier = "==0.4.1" },
 ]
 
 [[package]]
@@ -642,11 +651,11 @@ wheels = [
 
 [[package]]
 name = "snekmate"
-version = "0.1.0"
+version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a5/47/33f865f94c8892e3be93eaa103289709dd373442a02dc689452b18527f62/snekmate-0.1.0.tar.gz", hash = "sha256:8446b4c1aac8bf80b5e6a7e4fe7e9b2547200fabd9577bf6e22a2e79ba88d5de", size = 94723 }
+sdist = { url = "https://files.pythonhosted.org/packages/93/7d/26d6c8d9408d63d68d548f406ac900710d2a8c266bd2ad4198bb62819107/snekmate-0.1.1.tar.gz", hash = "sha256:7374e28f394466b6b545b76f4567b8b264684e444552031cd7b013e93b0900eb", size = 97639 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/1c/8d5285626ee40f297cc4bf944ffcb1c4bf02c966fb34ee8c452ab9b232d7/snekmate-0.1.0-py3-none-any.whl", hash = "sha256:0f56078c4237f2f57704ec6c974378751c5f30fb2c19f406aec2f173c002ab85", size = 112946 },
+    { url = "https://files.pythonhosted.org/packages/30/c1/703558fc6bdbb0ca9e953ad6ce5c8bd5b291a8c3ceb23eb427c57a86fdd4/snekmate-0.1.1-py3-none-any.whl", hash = "sha256:694dc3e5e1e7e5b82433852c303fa0deacb683cfc26a1f9e0505d90ab7a610a9", size = 115429 },
 ]
 
 [[package]]
@@ -708,19 +717,20 @@ wheels = [
 
 [[package]]
 name = "vyper"
-version = "0.4.0"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asttokens" },
     { name = "cbor2" },
     { name = "importlib-metadata" },
+    { name = "lark" },
     { name = "packaging" },
     { name = "pycryptodome" },
     { name = "wheel" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/09/befae43f33161cf817590337f5ea12e8849e401eaaca9eeea22852ae90d1/vyper-0.4.0.tar.gz", hash = "sha256:9687145c6a0bf42de52e92202ce9a913648d3c657ac8e5cfb9b35a100dc47e34", size = 672136 }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/f1/3848bc040c2715bf77e80cc8cd03359257a959d9cf4a037a3506804cb995/vyper-0.4.1.tar.gz", hash = "sha256:2a219b895c9b5ad6a71237a6fb7d03a6eccaa800faa30ba32418847e350a95e3", size = 734208 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/0b/7c14ae8aec83187a67d8c13a4fdff9bc4d72d9ef822ec7ce026b301a00cb/vyper-0.4.0-py3-none-any.whl", hash = "sha256:22d7e1eca229e95a909dc971ff5b1685c8379404e3fc3b7b84dbc59b5de1c262", size = 338856 },
+    { url = "https://files.pythonhosted.org/packages/2f/3f/fb474ea7f3e00a16fb23ea01e1844977e450aca7962e7ad9d11badb61683/vyper-0.4.1-py3-none-any.whl", hash = "sha256:b22e19e20557b3c13fa2721efabc4e926f624af9a3bd328e1da8fb6b727d908f", size = 370776 },
 ]
 
 [[package]]

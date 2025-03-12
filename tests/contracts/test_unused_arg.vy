@@ -1,4 +1,4 @@
-# pragma version 0.4.0
+# pragma version 0.4.1
 
 def function_with_unused_arg(_used_arg: uint256, _unused_arg: address) -> uint256:
     return _used_arg * 2
