@@ -32,7 +32,7 @@ natrix
 natrix --help                         # Show help message
 natrix --version                      # Show version information
 natrix --list-rules                   # List all available rules
-natrix --disable NTX001 NTX002        # Disable specific rules
+natrix --disable NTX1 NTX2        # Disable specific rules
 natrix --rule-config RuleName.param=value  # Configure rule parameters
 ```
 
@@ -46,7 +46,7 @@ You can configure Natrix using a `pyproject.toml` file in your project root:
 files = ["contracts/", "tests/contracts/"]
 
 # Rules to disable
-disabled_rules = ["NTX001", "NTX002"]
+disabled_rules = ["NTX1", "NTX2"]
 
 # Rule-specific configurations
 [tool.natrix.rule_configs.RuleName]
