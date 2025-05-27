@@ -127,7 +127,7 @@ def parse_args():
         "--disable",
         type=str,
         nargs="+",
-        help="List of rule codes to disable (e.g., --disable NTX003 NTX007).",
+        help="List of rule codes to disable (e.g., --disable NTX3 NTX7).",
     )
     parser.add_argument(
         "-c",
