@@ -21,7 +21,12 @@ class ImplicitViewRule(BaseRule):
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):
-        if node.is_constructor or "view" in node.modifiers:
+        if (
+            node.is_constructor
+            or "view" in node.modifiers
+            or "pure" in node.modifiers
+            or node.is_from_interface
+        ):
             return
 
         accesses = node.memory_accesses
