@@ -146,26 +146,16 @@ class RuleRegistry:
         base_path = os.path.dirname(base_package.__file__)
         package_path = os.path.join(base_path, *package_parts[1:])
 
-        # Find all Python modules in the package
+        # Find all Python modules in the package and import them
+        # This will trigger any @RuleRegistry.register decorators
         for _, module_name, is_pkg in pkgutil.iter_modules([package_path]):
             if is_pkg or module_name == "__init__" or module_name == "common":
                 continue
 
-            # Import the module
+            # Import the module to trigger decorator execution
             module_path = f"{rules_package}.{module_name}"
             try:
-                module = importlib.import_module(module_path)
-
-                # Find all classes in the module that are subclasses of BaseRule
-                for attr_name in dir(module):
-                    attr = getattr(module, attr_name)
-                    if (
-                        inspect.isclass(attr)
-                        and issubclass(attr, BaseRule)
-                        and attr is not BaseRule
-                    ):
-                        # Register the rule class
-                        cls.register(attr)
+                importlib.import_module(module_path)
             except Exception as e:
                 print(f"Error importing {module_path}: {e}")
 
