@@ -21,15 +21,6 @@ Natrix requires a specific version of the Vyper compiler, each release of natrix
 
 See the [API Reference](../api/index.md#creating-rules) for detailed information on implementing new rules.
 
-## Release Process
-
-For maintainers:
-
-1. **Update version** in `natrix/__version__.py`
-2. **Update version** in `pyproject.toml`
-3. **Create a git tag** with the version number
-4. **Push to GitHub** - CI will handle PyPI release
-
 ## Getting Help
 
 - **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/albertocentonze/natrix/issues)
