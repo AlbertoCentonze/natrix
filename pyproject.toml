@@ -16,6 +16,8 @@ dev-dependencies = [
     "pytest-xdist>=3.6.1",
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.26",
+    "snekmate==0.1.0",
+    "vyper==0.4.0",
 ]
 [project.scripts]
 natrix = "natrix.__main__:main"
