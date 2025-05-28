@@ -239,14 +239,14 @@ class BaseRule(VyperASTVisitor):
                     )
                     snippet_lines.append(f"{prefix}{line_num}: {lines[i]}")
 
-                # Add a caret pointing to the error position if it's a single line error
-                if line == end_line:
-                    caret_line = (
-                        "   " + " " * (len(str(line)) + 2) + " " * character + "^"
-                    )
-                    if end_character > character:
-                        caret_line += "~" * (end_character - character - 1)
-                    snippet_lines.append(caret_line)
+                    # Add a caret pointing to the error position immediately after the error line
+                    if line == end_line and line_num == line:
+                        caret_line = (
+                            "   " + " " * (len(str(line)) + 2) + " " * character + "^"
+                        )
+                        if end_character > character:
+                            caret_line += "~" * (end_character - character - 1)
+                        snippet_lines.append(caret_line)
 
                 source_snippet = "\n".join(snippet_lines)
             except Exception:
