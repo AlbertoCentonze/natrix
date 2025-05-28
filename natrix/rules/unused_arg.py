@@ -28,7 +28,7 @@ class UnusedArgRule(BaseRule):
         # Skip interface function definitions
         if node.is_from_interface:
             return
-            
+
         # Collect declared arguments in a dictionary, {arg_name: arg_node}
         declared_args = {}
         for arg_info in node.get("args.args"):

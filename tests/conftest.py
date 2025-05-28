@@ -66,3 +66,8 @@ def twocrypto_contract():
 @pytest.fixture()
 def for_loop_underscore_contract():
     return output_loader("for_loop_underscore")
+
+
+@pytest.fixture()
+def test_unused_arg_contract():
+    return output_loader("test_unused_arg")

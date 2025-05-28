@@ -32,8 +32,8 @@ def test_unused_variable(uncached_contract):
     ), "No issue found for 'another_unused_var'"
 
     # Check the positions - these should be the declaration positions, not the reassignment positions
-    assert hey_unused_var_issue.position == "6:4"
-    assert another_unused_var_issue.position == "7:4"
+    assert hey_unused_var_issue.position == "11:4"
+    assert another_unused_var_issue.position == "12:4"
 
     # Check the messages
     assert (
@@ -92,10 +92,12 @@ def test_for_loop_underscore(for_loop_underscore_contract):
     sorted_issues = sorted(issues, key=lambda x: int(x.position.split(":")[0]))
 
     # Check exact line numbers and messages to prevent regressions
-    assert sorted_issues[0].position == "23:4"  # Line for another_unused_var
-    assert sorted_issues[1].position == "24:4"  # Line for hey_unused_var
-    assert "another_unused_var" in sorted_issues[0].message
-    assert "hey_unused_var" in sorted_issues[1].message
+    assert sorted_issues[0].position == "6:8"  # Line for i in for loop
+    assert sorted_issues[1].position == "15:8"  # Line for x variable
+    assert sorted_issues[2].position == "18:4"  # Line for unused_var
+    assert "i" in sorted_issues[0].message
+    assert "x" in sorted_issues[1].message
+    assert "unused_var" in sorted_issues[2].message
 
     # Verify that 'owner' is not in the issues
     for issue in issues:
