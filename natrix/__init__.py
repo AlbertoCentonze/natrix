@@ -36,7 +36,7 @@ def lint_file(file_path, disabled_rules: Set[str] = None):
         except Exception as e:
             # Simple error message with suggestion to report the issue
             print(
-                f"Error running a rule: {str(e)}. Please report this issue on GitHub."
+                f"Error running rule {rule.run}: {str(e)}. Please report this issue on GitHub."
             )
 
     # Print issues with spacing between them
