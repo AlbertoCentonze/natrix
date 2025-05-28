@@ -19,3 +19,6 @@ dev-dependencies = [
 ]
 [project.scripts]
 natrix = "natrix.__main__:main"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
