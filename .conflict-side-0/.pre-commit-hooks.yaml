@@ -1,0 +1,5 @@
+- id: natrix
+  name: lint vyper
+  entry: natrix
+  language: python
+  pass_filenames: false

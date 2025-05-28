@@ -1,0 +1,3 @@
+ancestorEntries = ["docs/quick-start.md"]
+ourEntries = ["docs/quick-start.md"]
+theirEntries = ["docs/quick-start.md"]
