@@ -1,4 +1,4 @@
-# pragma version 0.4.1
+# pragma version 0.4.2
 
 @external
 def test_for_loop_underscore():

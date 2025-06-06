@@ -1,4 +1,4 @@
-# pragma version 0.4.1
+# pragma version 0.4.2
 """
 @title scrvUSD oracle
 @notice Oracle of scrvUSD share price for StableSwap pool and other integrations.
