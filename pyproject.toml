@@ -1,6 +1,6 @@
 [project]
 name = "natrix"
-version = "0.1.6"
+version = "0.1.7"
 description = "A Vyper linter for fine sneks."
 readme = "README.md"
 authors = [{ name = "Alberto Centonze", email = "albicento.ac@gmail.com" }]
