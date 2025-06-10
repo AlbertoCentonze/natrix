@@ -177,6 +177,26 @@ class FunctionDefNode(Node):
         ]
 
     @cached_property
+    def is_runtime_code(self) -> bool:
+        return not (self.is_constructor or self.is_from_interface)
+
+    @cached_property
+    def is_external(self) -> bool:
+        """
+        Check if the function is external by looking for the 'external' modifier.
+        """
+        return "external" in self.modifiers
+
+    @cached_property
+    def is_internal(self) -> bool:
+        """
+        Check if the function is internal by looking for the 'internal' modifier.
+        """
+        return "internal" in self.modifiers or not (
+            "external" in self.modifiers or self.is_runtime_code
+        )
+
+    @cached_property
     def memory_accesses(self) -> List[MemoryAccess]:
         """
         Returns all read/write accesses inside this function by scanning for
