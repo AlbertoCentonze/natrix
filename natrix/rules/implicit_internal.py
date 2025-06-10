@@ -21,10 +21,14 @@ class ImplicitInternalRule(BaseRule):
         )
 
     def visit_FunctionDef(self, node: FunctionDefNode):
+        print(f"Checking function: {node.get('name')}")
+        print(f"{node.is_runtime_code=}")
+        print(f"{node.is_external=}")
         if (
-            node.is_constructor
-            or node.is_from_interface
-            or "external" in node.modifiers
+            # not an internal function
+            not node.is_runtime_code
+            or node.is_external
+            # explicit internal
             or "internal" in node.modifiers
         ):
             return
