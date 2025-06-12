@@ -57,5 +57,6 @@ nav:
     - Implicit Export (NTX9): rules/implicit-export.md
     - Unused Argument (NTX10): rules/unused-argument.md
     - Argument Naming Convention (NTX11): rules/argument-naming.md
+    - Modifiers Ordering (NTX12): rules/modifiers-ordering.md
   - API Reference: api/index.md
   - Development: development/index.md
