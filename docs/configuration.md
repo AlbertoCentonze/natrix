@@ -12,6 +12,9 @@ files = ["contracts/", "tests/contracts/"]
 # Rules to disable globally
 disabled_rules = ["NTX1", "NTX2"]
 
+# Additional paths to search for imports
+path = ["lib", "vendor/contracts"]
+
 # Rule-specific configurations
 [tool.natrix.rule_configs.MemoryExpansion]
 max_frame_size = 25000
@@ -39,6 +42,26 @@ files = ["src/contracts/", "../shared/contracts/"]
 ```
 
 If no `files` configuration is provided, natrix will scan the current directory and all subdirectories for `.vy` files.
+
+### Import Paths
+
+Specify additional paths where the Vyper compiler should look for imports:
+
+```toml
+[tool.natrix]
+# Single path
+path = ["lib"]
+
+# Multiple paths
+path = ["lib", "vendor/contracts", "../shared"]
+
+# Paths are resolved relative to pyproject.toml location
+```
+
+This is equivalent to using the `-p` flag in the command line:
+```bash
+natrix contract.vy -p lib vendor/contracts ../shared
+```
 
 ### Disabling Rules
 
@@ -82,6 +105,7 @@ For detailed configuration examples and advanced usage, see the individual rule 
     ```toml
     [tool.natrix]
     files = ["contracts/core/", "contracts/interfaces/", "tests/unit/"]
+    path = ["lib/snekmate", "lib/vyper-utils"]
     disabled_rules = ["NTX7"]
 
     [tool.natrix.rule_configs.MemoryExpansion]
