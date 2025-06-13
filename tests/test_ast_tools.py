@@ -1,7 +1,7 @@
 import subprocess
 import re
 
-from natrix.ast_tools import VYPER_VERSION, vyper_compile, parse_file
+from natrix.ast_tools import VYPER_VERSION, vyper_compile, parse_file, parse_source
 
 
 def test_vyper_compile_integration():
@@ -48,3 +48,37 @@ def test_modules_compilation():
     result = vyper_compile(test_file, "annotated_ast")
     assert isinstance(result, dict)
     assert "ast" in result
+
+
+def test_parse_source():
+    # Simple Vyper contract source code
+    source_code = """
+# A simple counter contract
+counter: uint256
+
+@external
+def increment():
+    self.counter += 1
+
+@external
+@view
+def get_counter() -> uint256:
+    return self.counter
+"""
+
+    result = parse_source(source_code)
+
+    # Check the result structure
+    assert isinstance(result, dict)
+    assert "ast" in result
+    assert "ast_type" in result["ast"]
+    assert result["ast"]["ast_type"] == "Module"
+    assert "metadata" in result
+    assert isinstance(result["metadata"], dict)
+    assert "function_info" in result["metadata"]
+
+    # Check that we have our two functions
+    functions = result["metadata"]["function_info"]
+    function_names = [name.split()[0] for name in functions.keys()]
+    assert "increment" in function_names
+    assert "get_counter" in function_names

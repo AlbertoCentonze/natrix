@@ -84,6 +84,32 @@ def parse_file(file_path):
     return ast
 
 
+def parse_source(source_code):
+    """
+    Parse Vyper source code directly without requiring a file path.
+
+    Args:
+        source_code: The Vyper source code as a string
+
+    Returns:
+        The parsed AST with metadata
+    """
+    import tempfile
+
+    # Create a temporary file to hold the source code
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as temp_file:
+        temp_file.write(source_code)
+        temp_file_path = temp_file.name
+
+    try:
+        # Parse the temporary file
+        result = parse_file(temp_file_path)
+        return result
+    finally:
+        # Clean up the temporary file
+        os.unlink(temp_file_path)
+
+
 class VyperASTVisitor:
     def visit(self, node: Node):
         ast_type = node.ast_type
