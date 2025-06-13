@@ -77,7 +77,12 @@ def get_project_root():
 def read_pyproject_config():
     """Read configurations from pyproject.toml if it exists"""
     # Default path includes lib/pypi which is the default dependency folder for moccasin
-    config = {"files": [], "disabled_rules": set(), "rule_configs": {}, "path": ["lib/pypi"]}
+    config = {
+        "files": [],
+        "disabled_rules": set(),
+        "rule_configs": {},
+        "path": ["lib/pypi"],
+    }
 
     try:
         # Find the project root directory
@@ -265,7 +270,8 @@ def main():
             sys.exit(1)
 
         issues = [
-            lint_file(file, disabled_rules, extra_paths=extra_paths) for file in vy_files
+            lint_file(file, disabled_rules, extra_paths=extra_paths)
+            for file in vy_files
         ]
         issues_found = any(issues)
 
