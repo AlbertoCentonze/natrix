@@ -34,6 +34,7 @@ natrix --version                      # Show version information
 natrix --list-rules                   # List all available rules
 natrix --disable NTX1 NTX2        # Disable specific rules
 natrix --rule-config RuleName.param=value  # Configure rule parameters
+natrix -p /path/to/libs /another/path  # Add extra paths for imports
 ```
 
 ## Configuration
@@ -44,6 +45,9 @@ You can configure Natrix using a `pyproject.toml` file in your project root:
 [tool.natrix]
 # Files or directories to lint (relative to pyproject.toml)
 files = ["contracts/", "tests/contracts/"]
+
+# Additional paths to search for imports
+path = ["lib", "vendor/contracts"]
 
 # Rules to disable
 disabled_rules = ["NTX1", "NTX2"]
