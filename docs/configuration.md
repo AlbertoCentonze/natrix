@@ -58,6 +58,12 @@ path = ["lib", "vendor/contracts", "../shared"]
 # Paths are resolved relative to pyproject.toml location
 ```
 
+By default, natrix includes:
+1. All Python system paths (same paths Python uses for imports, obtained via `sys.path`)
+2. `lib/pypi` - the default dependency folder for moccasin
+
+Additional paths specified here will be added to these defaults.
+
 This is equivalent to using the `-p` flag in the command line:
 ```bash
 natrix contract.vy -p lib vendor/contracts ../shared
