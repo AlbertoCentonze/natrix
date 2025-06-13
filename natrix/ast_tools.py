@@ -55,11 +55,17 @@ def _obtain_sys_path():
     return valid_paths
 
 
-def vyper_compile(filename, formatting):
+def vyper_compile(filename, formatting, extra_paths=None):
     _check_vyper_version()
 
     # For each path add a '-p /the/path' flag to the compiler
     paths = [item for p in _obtain_sys_path() for item in ["-p", p]]
+
+    # Add extra paths if provided
+    if extra_paths:
+        for path in extra_paths:
+            paths.extend(["-p", path])
+
     command = ["vyper", "-f", formatting, filename] + paths
 
     process = subprocess.Popen(
@@ -76,9 +82,9 @@ def vyper_compile(filename, formatting):
         )
 
 
-def parse_file(file_path):
-    ast = vyper_compile(file_path, "annotated_ast")
-    metadata = vyper_compile(file_path, "metadata")
+def parse_file(file_path, extra_paths=None):
+    ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
+    metadata = vyper_compile(file_path, "metadata", extra_paths=extra_paths)
 
     ast["metadata"] = metadata
     return ast

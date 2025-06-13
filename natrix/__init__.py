@@ -15,9 +15,9 @@ from natrix.ast_tools import parse_file
 from natrix.rules.common import RuleRegistry
 
 
-def lint_file(file_path, disabled_rules: Set[str] = None):
+def lint_file(file_path, disabled_rules: Set[str] = None, extra_paths=None):
     """Lint a single Vyper file with the given rules configuration."""
-    ast = parse_file(file_path)
+    ast = parse_file(file_path, extra_paths=extra_paths)
 
     if disabled_rules is None:
         disabled_rules = set()
@@ -76,7 +76,7 @@ def get_project_root():
 
 def read_pyproject_config():
     """Read configurations from pyproject.toml if it exists"""
-    config = {"files": [], "disabled_rules": set(), "rule_configs": {}}
+    config = {"files": [], "disabled_rules": set(), "rule_configs": {}, "path": []}
 
     try:
         # Find the project root directory
@@ -105,6 +105,15 @@ def read_pyproject_config():
                         natrix_config["rule_configs"], dict
                     ):
                         config["rule_configs"] = natrix_config["rule_configs"]
+                    # Parse path configurations
+                    if "path" in natrix_config and isinstance(
+                        natrix_config["path"], list
+                    ):
+                        # Make paths relative to pyproject.toml location
+                        config["path"] = [
+                            os.path.normpath(os.path.join(project_root, path))
+                            for path in natrix_config["path"]
+                        ]
     except Exception as e:
         print(f"Warning: Error reading pyproject.toml: {e}")
 
@@ -140,6 +149,13 @@ def parse_args():
         "--list-rules",
         action="store_true",
         help="List all available rules with their descriptions.",
+    )
+    parser.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        nargs="+",
+        help="List of additional paths to search for imports (e.g., -p /path/to/libs /another/path).",
     )
     return parser.parse_args()
 
@@ -211,6 +227,11 @@ def main():
     if args.disable:
         disabled_rules.update(args.disable)
 
+    # Combine paths from CLI and pyproject.toml
+    extra_paths = pyproject_config.get("path", [])
+    if args.path:
+        extra_paths.extend(args.path)
+
     # Handle files
     if args.files:
         all_vy_files = []
@@ -229,7 +250,10 @@ def main():
             print("No valid .vy files to lint.")
             sys.exit(1)
 
-        issues = [lint_file(file, disabled_rules) for file in all_vy_files]
+        issues = [
+            lint_file(file, disabled_rules, extra_paths=extra_paths)
+            for file in all_vy_files
+        ]
         issues_found = any(issues)
     else:
         # If no paths are provided, search for .vy files in the current directory recursively
@@ -239,7 +263,9 @@ def main():
             print("No .vy files found in the current directory.")
             sys.exit(1)
 
-        issues = [lint_file(file, disabled_rules) for file in vy_files]
+        issues = [
+            lint_file(file, disabled_rules, extra_paths=extra_paths) for file in vy_files
+        ]
         issues_found = any(issues)
 
     if issues_found:
