@@ -65,32 +65,26 @@ def _obtain_default_paths():
         "lib/pypi",  # Default dependency folder for moccasin
         # Add more paths here in the future
     ]
-    
+
     # Return only existing paths
     existing_paths = []
     for path in default_paths:
         if os.path.exists(path) and os.path.isdir(path):
             existing_paths.append(path)
-    
+
     return existing_paths
 
 
-def vyper_compile(filename, formatting, extra_paths=None):
+def vyper_compile(filename, formatting, extra_paths=[]):
     _check_vyper_version()
 
-    # For each path add a '-p /the/path' flag to the compiler
-    paths = [item for p in _obtain_sys_path() for item in ["-p", p]]
-    
-    # Add default paths (like lib/pypi for moccasin)
-    for path in _obtain_default_paths():
-        paths.extend(["-p", path])
+    # Combine all paths
+    all_paths = _obtain_sys_path() + _obtain_default_paths() + extra_paths
 
-    # Add extra paths if provided
-    if extra_paths:
-        for path in extra_paths:
-            paths.extend(["-p", path])
+    # Convert to compiler flags
+    path_flags = [item for p in all_paths for item in ["-p", p]]
 
-    command = ["vyper", "-f", formatting, filename] + paths
+    command = ["vyper", "-f", formatting, filename] + path_flags
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -106,7 +100,7 @@ def vyper_compile(filename, formatting, extra_paths=None):
         )
 
 
-def parse_file(file_path, extra_paths=None):
+def parse_file(file_path, extra_paths=[]):
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
     metadata = vyper_compile(file_path, "metadata", extra_paths=extra_paths)
 
