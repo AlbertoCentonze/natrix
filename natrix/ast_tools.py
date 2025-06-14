@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 import ast
 import os
 import subprocess
 import json
 import re
+from typing import Dict, List, Any
 from natrix.ast_node import Node
+
+# Type alias for Vyper AST
+VyperAST = Dict[str, Any]
 
 VYPER_VERSION = "0.4.2"
 
 
-def _check_vyper_version():
+def _check_vyper_version() -> None:
     """
     Check if vyper is installed and at the required version.
     Raises an exception if vyper is not available or not at the correct version.
@@ -32,7 +38,7 @@ def _check_vyper_version():
         )
 
 
-def _obtain_sys_path():
+def _obtain_sys_path() -> List[str]:
     """
     Obtain all the system paths in which the compiler would
     normally look for modules. This allows to lint vyper files
@@ -55,7 +61,7 @@ def _obtain_sys_path():
     return valid_paths
 
 
-def _obtain_default_paths():
+def _obtain_default_paths() -> List[str]:
     """
     Obtain default paths for Vyper imports.
     Only returns paths that actually exist on the system.
@@ -75,7 +81,9 @@ def _obtain_default_paths():
     return existing_paths
 
 
-def vyper_compile(filename, formatting, extra_paths=[]):
+def vyper_compile(
+    filename: str, formatting: str, extra_paths: List[str] = []
+) -> VyperAST:
     _check_vyper_version()
 
     # Combine all paths
@@ -92,7 +100,10 @@ def vyper_compile(filename, formatting, extra_paths=[]):
     stdout, stderr = process.communicate()
 
     try:
-        return json.loads(stdout)
+        result = json.loads(stdout)
+        # Assert to help mypy understand the type
+        assert isinstance(result, dict)
+        return result
     except Exception:
         # TODO change error level
         raise Exception(
@@ -100,7 +111,7 @@ def vyper_compile(filename, formatting, extra_paths=[]):
         )
 
 
-def parse_file(file_path, extra_paths=[]):
+def parse_file(file_path: str, extra_paths: List[str] = []) -> VyperAST:
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
     metadata = vyper_compile(file_path, "metadata", extra_paths=extra_paths)
 
@@ -108,7 +119,7 @@ def parse_file(file_path, extra_paths=[]):
     return ast
 
 
-def parse_source(source_code):
+def parse_source(source_code: str) -> VyperAST:
     """
     Parse Vyper source code directly without requiring a file path.
 
@@ -135,7 +146,7 @@ def parse_source(source_code):
 
 
 class VyperASTVisitor:
-    def visit(self, node: Node):
+    def visit(self, node: Node) -> None:
         ast_type = node.ast_type
         if ast_type:
             method_name = f"visit_{ast_type}"

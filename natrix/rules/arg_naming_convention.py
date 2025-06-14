@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import Node, FunctionDefNode
 from natrix.rules.common import BaseRule, RuleRegistry
 import re
@@ -19,7 +21,7 @@ class ArgNamingConventionRule(BaseRule):
         "Function '{}' argument '{}' does not match the naming convention pattern '{}'."
     )
 
-    def __init__(self, pattern=r"^_"):
+    def __init__(self, pattern: str = r"^_") -> None:
         super().__init__(
             severity="warning",
             code=self.CODE,
@@ -27,7 +29,7 @@ class ArgNamingConventionRule(BaseRule):
         )
         self.pattern = re.compile(pattern)
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         # Collect declared arguments in a dictionary, {arg_name: arg_node}
         for arg_info in node.get("args.args"):
             arg_node = Node(arg_info)

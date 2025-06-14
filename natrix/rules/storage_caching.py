@@ -1,11 +1,13 @@
-from collections import defaultdict
-from typing import Set
+from __future__ import annotations
 
-from natrix.ast_node import FunctionDefNode, MemoryAccess
+from collections import defaultdict
+from typing import Set, Dict, List, Optional
+
+from natrix.ast_node import FunctionDefNode, MemoryAccess, Node
 from natrix.rules.common import BaseRule
 
 
-def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
+def analyze_access_patterns(accesses: list[MemoryAccess]) -> Set[MemoryAccess]:
     # Sort accesses by the node's position in the code
     combined = sorted(
         accesses, key=lambda x: (x.node.get("lineno"), x.node.get("col_offset"))
@@ -24,9 +26,9 @@ def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
         filtered_combined.append(access)
 
     # Analyze read/write patterns to suggest caching
-    access_counts = defaultdict(int)  # Tracks consecutive reads
-    last_write = {}  # Tracks last write for each variable
-    suggestions = []  # Collect suggestions for caching
+    access_counts: Dict[str, int] = defaultdict(int)  # Tracks consecutive reads
+    last_write: Dict[str, Optional[Node]] = {}  # Tracks last write for each variable
+    suggestions: List[MemoryAccess] = []  # Collect suggestions for caching
 
     for access in filtered_combined:
         if access.type == "read":
@@ -42,7 +44,7 @@ def analyze_access_patterns(accesses) -> Set[MemoryAccess]:
             last_write[access.var] = access.node
             access_counts[access.var] = 0
 
-    return suggestions
+    return set(suggestions)
 
 
 class CacheStorageVariableRule(BaseRule):
@@ -55,14 +57,14 @@ class CacheStorageVariableRule(BaseRule):
     CODE = "NTX7"
     MESSAGE = "Storage variable '{}' is accessed multiple times; consider caching it to save gas."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="optimization",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         accesses = node.memory_accesses
 
         # Analyze accesses for caching suggestions

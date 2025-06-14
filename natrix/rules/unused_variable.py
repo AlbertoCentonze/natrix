@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule, RuleRegistry
 
@@ -19,14 +21,14 @@ class UnusedVariableRule(BaseRule):
     CODE = "NTX8"
     MESSAGE = "Variable '{}' is declared but never used."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="warning",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         # Gather all assignment-related nodes
         all_assigns = node.get_descendants(
             node_type=("AnnAssign", "Assign", "AugAssign")

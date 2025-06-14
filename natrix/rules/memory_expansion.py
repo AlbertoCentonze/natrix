@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule, RuleRegistry
 
@@ -15,7 +17,7 @@ class MemoryExpansionRule(BaseRule):
     CODE = "NTX1"
     MESSAGE = "Function '{}' has a large frame size of {} bytes."
 
-    def __init__(self, max_frame_size=20_000):
+    def __init__(self, max_frame_size: int = 20_000) -> None:
         super().__init__(
             severity="warning",
             code=self.CODE,
@@ -23,7 +25,7 @@ class MemoryExpansionRule(BaseRule):
         )
         self.max_frame_size = max_frame_size
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         # FunctionDef can also appear in inline interfaces,
         # however this rule is not relevant for them.
         if node.is_from_interface:

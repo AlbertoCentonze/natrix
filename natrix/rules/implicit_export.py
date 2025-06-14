@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from natrix.ast_node import Node
 from natrix.rules.common import BaseRule, RuleRegistry
 
 
@@ -12,14 +15,14 @@ class ImplicitExportRule(BaseRule):
     CODE = "NTX9"
     MESSAGE = "Module '{}' is exposing all its functions. Consider exporting them one by one to make the contract more explicit."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="important",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_ExportsDecl(self, node):
+    def visit_ExportsDecl(self, node: Node) -> None:
         if node.get("annotation.attr") != "__interface__":
             return
 

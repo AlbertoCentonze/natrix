@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule, RuleRegistry
 
@@ -22,14 +24,14 @@ class ModifiersOrderingRule(BaseRule):
     # Define the expected order: visibility -> mutability -> security
     MODIFIER_ORDER = [VISIBILITY_MODIFIERS, MUTABILITY_MODIFIERS, SECURITY_MODIFIERS]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="style",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         # Skip interface functions
         if node.is_from_interface:
             return
@@ -52,7 +54,7 @@ class ModifiersOrderingRule(BaseRule):
                 node, node.get("name"), ", ".join(f"@{mod}" for mod in modifiers)
             )
 
-    def _is_ordered(self, categorized_modifiers):
+    def _is_ordered(self, categorized_modifiers: list[tuple[int, str]]) -> bool:
         """Check if the categorized modifiers are in the correct order."""
         if len(categorized_modifiers) <= 1:
             return True
