@@ -6,6 +6,9 @@
 | Severity | Warning |
 | Configuration | `max_frame_size` - Maximum allowed frame size in bytes (default: 20,000) |
 
+!!! note "Metadata Requirement"
+    This rule requires compiler metadata to analyze frame sizes. It cannot check files that use deferred module initialization (`uses:` statement). See [Metadata Limitations](../metadata-limitations.md) for details.
+
 ## Background
 
 Vyper can only pass arguments by value. When a DynArray is passed as an argument in an external function, the amount of memory allocated will be the upper bound of the array size, and not its actual size, which can lead to unexpected memory expansion (and crazy gas costs) if arrays (even small) with large bounds are passed.

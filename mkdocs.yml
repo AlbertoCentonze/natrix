@@ -44,6 +44,7 @@ nav:
     - Welcome To Natrix: index.md
     - Quick Start: quick-start.md
     - Configuration: configuration.md
+    - Metadata Limitations: metadata-limitations.md
   - Rules:
     - Overview: rules/index.md
     - Memory Expansion (NTX1): rules/memory-expansion.md
