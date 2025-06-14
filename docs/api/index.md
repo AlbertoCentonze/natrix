@@ -12,6 +12,15 @@ Natrix is built around several key abstractions that provide an unstable API for
 3. **Rule Application**: Apply registered rules using the visitor pattern
 4. **Issue Collection**: Gather and format rule violations
 
+### Output Formats
+
+Natrix supports multiple output formats:
+
+- **CLI Output**: Colored terminal output with source code snippets (default)
+- **JSON Output**: Machine-readable format for programmatic integration
+
+Use the `--json` flag to enable JSON output, which returns an array of issue objects suitable for IDE integration, CI/CD pipelines, or other automated tools.
+
 ## Node API
 
 The `Node` class is the primary abstraction for working with Vyper AST data. It is inspired by the [`VyperNode`](https://github.com/vyperlang/vyper/blob/6ecdb3c01088ebd0060ccdc65a5a4c231e6340cc/vyper/ast/nodes.py) class but adapted to work with json AST data.
