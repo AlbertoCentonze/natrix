@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import Node
 from natrix.rules.common import BaseRule, RuleRegistry
 
@@ -13,14 +15,14 @@ class PrintLeftRule(BaseRule):
     CODE = "NTX6"
     MESSAGE = "Found a 'print' statement; consider removing it in production code."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="warning",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_Call(self, node: Node):
+    def visit_Call(self, node: Node) -> None:
         func_id = node.get("func.id")
         if func_id == "print":
             self.add_issue(node)

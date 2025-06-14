@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import FunctionDefNode
 from natrix.rules.common import BaseRule, RuleRegistry
 
@@ -13,14 +15,14 @@ class ImplicitViewRule(BaseRule):
     CODE = "NTX4"
     MESSAGE = "Function '{}' reads contract state but is not marked as 'view'."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="style",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         if (
             node.is_constructor
             or "view" in node.modifiers

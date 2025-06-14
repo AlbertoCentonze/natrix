@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from natrix.ast_node import Node, FunctionDefNode
 from natrix.rules.common import BaseRule, RuleRegistry
 
@@ -17,14 +19,14 @@ class UnusedArgRule(BaseRule):
     CODE = "NTX10"
     MESSAGE = "Function '{}' argument '{}' is never used."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="warning",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_FunctionDef(self, node: FunctionDefNode):
+    def visit_FunctionDef(self, node: FunctionDefNode) -> None:
         # Skip interface function definitions
         if node.is_from_interface:
             return

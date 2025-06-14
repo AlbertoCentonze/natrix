@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from natrix.ast_node import Node
 from natrix.rules.common import BaseRule, RuleRegistry
 
 
@@ -12,14 +15,14 @@ class ConstantNamingRule(BaseRule):
     CODE = "NTX2"
     MESSAGE = "Constant '{}' should be named in UPPER_SNAKE_CASE"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             severity="style",
             code=self.CODE,
             message=self.MESSAGE,
         )
 
-    def visit_VariableDecl(self, node):
+    def visit_VariableDecl(self, node: Node) -> None:
         if not node.get("is_constant"):
             return
 

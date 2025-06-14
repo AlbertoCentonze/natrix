@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Callable, List, Dict, Type, Any
+from typing import Callable, List, Dict, Type, Any, Optional, Tuple
 import inspect
 import importlib
 import os
@@ -7,7 +9,7 @@ import pkgutil
 import importlib.util
 
 from natrix.ast_node import Node
-from natrix.ast_tools import VyperASTVisitor
+from natrix.ast_tools import VyperASTVisitor, VyperAST
 
 
 @dataclass(frozen=True)
@@ -24,11 +26,11 @@ class Issue:
     severity: str
     code: str
     message: str
-    source_code: str = None
-    start_position: tuple = None
-    end_position: tuple = None
+    source_code: Optional[str] = None
+    start_position: Optional[Tuple[int, int]] = None
+    end_position: Optional[Tuple[int, int]] = None
 
-    def cli_format(self):
+    def cli_format(self) -> str:
         # ANSI color codes
         RED = "\033[31m"
         YELLOW = "\033[33m"
@@ -64,7 +66,7 @@ class Issue:
 
 class RuleRegistry:
     _rules: Dict[str, Type["BaseRule"]] = {}
-    _rule_instances: List[Rule] = None
+    _rule_instances: Optional[List[Rule]] = None
 
     @classmethod
     def register(cls, rule_class: Type["BaseRule"]) -> Type["BaseRule"]:
@@ -81,7 +83,9 @@ class RuleRegistry:
         return cls._rules.copy()
 
     @classmethod
-    def get_rules(cls, rule_configs: Dict[str, Dict[str, Any]] = None) -> List[Rule]:
+    def get_rules(
+        cls, rule_configs: Optional[Dict[str, Dict[str, Any]]] = None
+    ) -> List[Rule]:
         """
         Get or create rule instances with the given configurations.
         Rules are discovered and instantiated only once per run.
@@ -134,7 +138,7 @@ class RuleRegistry:
         return cls._rule_instances
 
     @classmethod
-    def discover_rules(cls, rules_package: str = "natrix.rules"):
+    def discover_rules(cls, rules_package: str = "natrix.rules") -> None:
         """Discover all rule classes in the given package"""
         # Skip discovery if rules have already been discovered
         if cls._rules:
@@ -143,6 +147,8 @@ class RuleRegistry:
         # Get the package directory in a way that works without __init__.py
         package_parts = rules_package.split(".")
         base_package = importlib.import_module(package_parts[0])
+        if base_package.__file__ is None:
+            return
         base_path = os.path.dirname(base_package.__file__)
         package_path = os.path.join(base_path, *package_parts[1:])
 
@@ -160,29 +166,23 @@ class RuleRegistry:
                 print(f"Error importing {module_path}: {e}")
 
     @classmethod
-    def reset(cls):
+    def reset(cls) -> None:
         """Reset the registry (mainly for testing purposes)"""
         cls._rules = {}
         cls._rule_instances = None
 
 
 class BaseRule(VyperASTVisitor):
-    def __init__(
-        self, severity: str = "warning", code: str = None, message: str = None
-    ):
-        self.results = []
+    def __init__(self, severity: str, code: str, message: str):
+        self.results: List[Any] = []
         self.severity = severity
-        self.code = code or getattr(
-            self.__class__, "CODE", f"NTX{id(self.__class__) % 1000:03d}"
-        )
-        self.message = message or getattr(
-            self.__class__, "MESSAGE", "Generic rule violation"
-        )
-        self.issues = []
-        self.source_code = None
-        self.file_path = None
+        self.code = code
+        self.message = message
+        self.issues: List[Issue] = []
+        self.source_code: Optional[str] = None
+        self.file_path: Optional[str] = None
 
-    def run(self, compiler_output) -> List[Issue]:
+    def run(self, compiler_output: VyperAST) -> List[Issue]:
         self.issues = []  # reset issues for each run
         self.compiler_output = Node(compiler_output)
 
@@ -195,7 +195,7 @@ class BaseRule(VyperASTVisitor):
         self.visit(Node(compiler_output["ast"]))
         return self.issues
 
-    def _load_source_code(self):
+    def _load_source_code(self) -> Optional[str]:
         """Load the source code from the file path if not already loaded."""
         if (
             self.source_code is None
@@ -209,7 +209,7 @@ class BaseRule(VyperASTVisitor):
                 self.source_code = None
         return self.source_code
 
-    def add_issue(self, node: Node, *message_args):
+    def add_issue(self, node: Node, *message_args: Any) -> None:
         line = node.get("lineno")
         character = node.get("col_offset")
         end_line = node.get("end_lineno", line)
@@ -220,10 +220,11 @@ class BaseRule(VyperASTVisitor):
 
         # Get the source code snippet if available
         source_snippet = None
-        if self._load_source_code():
+        source_code = self._load_source_code()
+        if source_code:
             try:
                 # Split the source code into lines
-                lines = self.source_code.splitlines()
+                lines = source_code.splitlines()
 
                 # Get the relevant lines
                 context_lines = 1  # Number of lines to show before and after
@@ -254,7 +255,7 @@ class BaseRule(VyperASTVisitor):
                 pass
 
         issue = Issue(
-            file=self.file_path,
+            file=self.file_path or "<unknown>",
             position=position,
             severity=self.severity,
             code=self.code,

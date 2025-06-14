@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import sys
 import os
 import argparse
 import re
-from typing import Set
+from typing import Set, List, Dict, Any, Optional
 
 # Import tomllib for Python 3.11+ or tomli for earlier versions
 try:
@@ -15,7 +17,11 @@ from natrix.ast_tools import parse_file
 from natrix.rules.common import RuleRegistry
 
 
-def lint_file(file_path, disabled_rules: Set[str] = None, extra_paths=None):
+def lint_file(
+    file_path: str,
+    disabled_rules: Optional[Set[str]] = None,
+    extra_paths: List[str] = [],
+) -> bool:
     """Lint a single Vyper file with the given rules configuration."""
     ast = parse_file(file_path, extra_paths=extra_paths)
 
@@ -48,7 +54,7 @@ def lint_file(file_path, disabled_rules: Set[str] = None, extra_paths=None):
     return bool(issues)
 
 
-def find_vy_files(directory):
+def find_vy_files(directory: str) -> List[str]:
     # Recursively find all .vy files in the given directory, excluding specified directories
     vy_files = []
     for root, dirs, files in os.walk(directory):
@@ -60,7 +66,7 @@ def find_vy_files(directory):
     return vy_files
 
 
-def get_project_root():
+def get_project_root() -> str:
     """Get the project root directory, which contains the pyproject.toml file."""
     # First try to find it from the current working directory upwards
     current_dir = os.path.abspath(os.getcwd())
@@ -74,9 +80,9 @@ def get_project_root():
     return os.getcwd()
 
 
-def read_pyproject_config():
+def read_pyproject_config() -> Dict[str, Any]:
     """Read configurations from pyproject.toml if it exists"""
-    config = {
+    config: Dict[str, Any] = {
         "files": [],
         "disabled_rules": set(),
         "rule_configs": {},
@@ -125,7 +131,7 @@ def read_pyproject_config():
     return config
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="A linter for Vyper Smart Contracts.")
     parser.add_argument(
@@ -165,7 +171,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     """Main entry point for the linter."""
     args = parse_args()
 
@@ -187,7 +193,7 @@ def main():
         sys.exit(0)
 
     # Parse rule configurations from CLI
-    rule_configs = {}
+    rule_configs: Dict[str, Dict[str, Any]] = {}
     if args.rule_config:
         for config_str in args.rule_config:
             try:
