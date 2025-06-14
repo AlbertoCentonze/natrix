@@ -105,6 +105,18 @@ pattern = "^_[a-z][a-z0-9_]*$"  # Default: "^_"
 
 For detailed configuration examples and advanced usage, see the individual rule documentation pages in the [Rules](./rules/index.md) section.
 
+## JSON Output Mode
+
+Natrix supports JSON output for programmatic integration with IDEs, CI/CD pipelines, and other development tools.
+
+Enable JSON output with the `--json` flag:
+
+```bash
+natrix contract.vy --json
+```
+
+This outputs issues as a JSON array instead of the default colored terminal output, making it easy to parse and process results programmatically.
+
 ## Example Configurations
 
 === "DeFi Protocol"
