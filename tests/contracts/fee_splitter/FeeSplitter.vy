@@ -47,7 +47,7 @@ struct Receiver:
 version: public(constant(String[8])) = "0.1.0"  # no guarantees on abi stability
 
 # maximum number of splits
-MAX_RECEIVERS: constant(uint256) = 100
+MAX_RECEIVERS: constant(uint256) = 50_000
 # maximum basis points (100%)
 MAX_BPS: constant(uint256) = 10_000
 DYNAMIC_WEIGHT_EIP165_ID: constant(bytes4) = 0xA1AAB33F
