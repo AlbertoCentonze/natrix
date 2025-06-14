@@ -55,11 +55,35 @@ def _obtain_sys_path():
     return valid_paths
 
 
+def _obtain_default_paths():
+    """
+    Obtain default paths for Vyper imports.
+    Only returns paths that actually exist on the system.
+    """
+    # List of default paths to check
+    default_paths = [
+        "lib/pypi",  # Default dependency folder for moccasin
+        # Add more paths here in the future
+    ]
+    
+    # Return only existing paths
+    existing_paths = []
+    for path in default_paths:
+        if os.path.exists(path) and os.path.isdir(path):
+            existing_paths.append(path)
+    
+    return existing_paths
+
+
 def vyper_compile(filename, formatting, extra_paths=None):
     _check_vyper_version()
 
     # For each path add a '-p /the/path' flag to the compiler
     paths = [item for p in _obtain_sys_path() for item in ["-p", p]]
+    
+    # Add default paths (like lib/pypi for moccasin)
+    for path in _obtain_default_paths():
+        paths.extend(["-p", path])
 
     # Add extra paths if provided
     if extra_paths:
