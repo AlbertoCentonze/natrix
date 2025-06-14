@@ -5,6 +5,8 @@ import os
 import argparse
 import re
 from typing import Set, List, Dict, Any, Optional
+import json
+from dataclasses import asdict
 
 # Import tomllib for Python 3.11+ or tomli for earlier versions
 try:
@@ -14,14 +16,59 @@ except ImportError:
 
 from natrix.__version__ import __version__
 from natrix.ast_tools import parse_file
-from natrix.rules.common import RuleRegistry
+from natrix.rules.common import RuleRegistry, Issue
+
+
+class OutputFormatter:
+    """Handles output formatting for both CLI and JSON modes."""
+
+    def __init__(self, json_mode: bool = False):
+        self.json_mode = json_mode
+        self.messages: List[str] = []  # Collect non-issue messages for JSON mode
+
+    def print(self, message: str) -> None:
+        """Print a message (only in CLI mode)."""
+        if not self.json_mode:
+            print(message)
+        else:
+            # In JSON mode, we might want to collect these for debugging
+            self.messages.append(message)
+
+    def print_issues(self, issues: List[Issue]) -> None:
+        """Print all issues in the appropriate format."""
+        if self.json_mode:
+            # Convert Issue objects to dictionaries, excluding source_code for JSON output
+            json_issues = []
+            for issue in issues:
+                issue_dict = asdict(issue)
+                # Remove source_code from JSON output as it's for CLI display only
+                issue_dict.pop("source_code", None)
+                json_issues.append(issue_dict)
+            print(json.dumps(json_issues, indent=2))
+        else:
+            # Print issues with spacing between them
+            for i, issue in enumerate(issues):
+                if i > 0:  # Add a blank line between issues
+                    print()
+                print(issue.cli_format())
+
+    def print_summary(self, has_issues: bool) -> None:
+        """Print the final summary message."""
+        if self.json_mode:
+            return
+
+        if has_issues:
+            print("\nFound issues in files.")
+        else:
+            print("Vyper files are lint free! 🐍")
 
 
 def lint_file(
     file_path: str,
+    formatter: OutputFormatter,
     disabled_rules: Optional[Set[str]] = None,
     extra_paths: List[str] = [],
-) -> bool:
+) -> List[Issue]:
     """Lint a single Vyper file with the given rules configuration."""
     ast = parse_file(file_path, extra_paths=extra_paths)
 
@@ -41,17 +88,11 @@ def lint_file(
             )
         except Exception as e:
             # Simple error message with suggestion to report the issue
-            print(
+            formatter.print(
                 f"Error running rule {rule.run}: {str(e)}. Please report this issue on GitHub."
             )
 
-    # Print issues with spacing between them
-    for i, issue in enumerate(issues):
-        if i > 0:  # Add a blank line between issues
-            print()
-        print(issue.cli_format())
-
-    return bool(issues)
+    return issues
 
 
 def find_vy_files(directory: str) -> List[str]:
@@ -168,6 +209,11 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         help="List of additional paths to search for imports (e.g., -p /path/to/libs /another/path).",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output issues in JSON format.",
+    )
     return parser.parse_args()
 
 
@@ -191,6 +237,9 @@ def main() -> None:
             description = doc_lines[0].strip() if doc_lines else "No description"
             print(f"  {rule_name}: {description}")
         sys.exit(0)
+
+    # Create the output formatter
+    formatter = OutputFormatter(json_mode=args.json)
 
     # Parse rule configurations from CLI
     rule_configs: Dict[str, Dict[str, Any]] = {}
@@ -216,8 +265,8 @@ def main() -> None:
 
                 rule_configs[rule_name][param] = value
             except ValueError:
-                print(f"Invalid rule configuration format: {config_str}")
-                print("Expected format: RuleName.param=value")
+                formatter.print(f"Invalid rule configuration format: {config_str}")
+                formatter.print("Expected format: RuleName.param=value")
                 sys.exit(1)
 
     # Read config from pyproject.toml
@@ -252,39 +301,38 @@ def main() -> None:
             elif os.path.isdir(path):
                 dir_vy_files = find_vy_files(path)
                 if not dir_vy_files:
-                    print(f"No .vy files found in the directory: {path}")
+                    formatter.print(f"No .vy files found in the directory: {path}")
                 all_vy_files.extend(dir_vy_files)
             else:
-                print(f"Provided path is not a valid .vy file or directory: {path}")
+                formatter.print(
+                    f"Provided path is not a valid .vy file or directory: {path}"
+                )
 
         if not all_vy_files:
-            print("No valid .vy files to lint.")
+            formatter.print("No valid .vy files to lint.")
             sys.exit(1)
-
-        issues = [
-            lint_file(file, disabled_rules, extra_paths=extra_paths)
-            for file in all_vy_files
-        ]
-        issues_found = any(issues)
     else:
         # If no paths are provided, search for .vy files in the current directory recursively
-        vy_files = find_vy_files(".")
+        all_vy_files = find_vy_files(".")
 
-        if not vy_files:
-            print("No .vy files found in the current directory.")
+        if not all_vy_files:
+            formatter.print("No .vy files found in the current directory.")
             sys.exit(1)
 
-        issues = [
-            lint_file(file, disabled_rules, extra_paths=extra_paths)
-            for file in vy_files
-        ]
-        issues_found = any(issues)
+    # Collect all issues from all files
+    all_issues: List[Issue] = []
+    for file in all_vy_files:
+        file_issues = lint_file(
+            file, formatter, disabled_rules, extra_paths=extra_paths
+        )
+        all_issues.extend(file_issues)
 
-    if issues_found:
-        sys.exit(1)
-    else:
-        print("Vyper files are lint free! 🐍")
-        sys.exit(0)
+    # Output issues
+    formatter.print_issues(all_issues)
+
+    # Print summary and exit
+    formatter.print_summary(bool(all_issues))
+    sys.exit(1 if all_issues else 0)
 
 
 if __name__ == "__main__":
