@@ -113,9 +113,25 @@ def vyper_compile(
 
 def parse_file(file_path: str, extra_paths: List[str] = []) -> VyperAST:
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
-    metadata = vyper_compile(file_path, "metadata", extra_paths=extra_paths)
 
-    ast["metadata"] = metadata
+    # Try to compile metadata, but handle InitializerException gracefully
+    # This happens when a module uses deferred initialization (uses: module_name)
+    try:
+        metadata = vyper_compile(file_path, "metadata", extra_paths=extra_paths)
+        ast["metadata"] = metadata
+    except Exception as e:
+        error_str = str(e)
+        if (
+            "vyper.exceptions.InitializerException" in error_str
+            and "is used but never initialized!" in error_str
+        ):
+            # Skip metadata for files with deferred module initialization
+            # This is a known limitation of the Vyper compiler
+            pass
+        else:
+            # Re-raise other exceptions
+            raise e
+
     return ast
 
 
