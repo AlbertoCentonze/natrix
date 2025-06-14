@@ -32,10 +32,22 @@ class MemoryExpansionRule(BaseRule):
             return
 
         function_name = node.get("name")
-        frame_size = self.compiler_output.get(
-            f"metadata.function_info.{function_name}.frame_info.frame_size"
-        )
+        # The compiler adds numbers to function names in metadata (e.g., "dispatch_fees (12)")
+        # We need to find the matching entry
+        # TODO numbering is introduced in case of function names overlapping
+        # across modules. We currently don't support this case.
+        frame_size = None
+        for func_key in self.compiler_output.get("metadata.function_info", {}):
+            if func_key.startswith(f"{function_name} ("):
+                frame_size = self.compiler_output.get(
+                    f"metadata.function_info.{func_key}.frame_info.frame_size"
+                )
+                break
 
-        if frame_size > self.max_frame_size:
+        # This rule can't check all the functions because the compiler
+        # erases functions that are unused directly in the module.
+        # (i.e. functions imported by other modules).
+        # TODO codegen some wrapper function that fakes usage.
+        if frame_size is not None and frame_size > self.max_frame_size:
             # Add an issue if the frame size exceeds the threshold
             self.add_issue(node, function_name, frame_size)
