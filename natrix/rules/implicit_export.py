@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from natrix.ast_node import Node
+from typing import TYPE_CHECKING
+
 from natrix.rules.common import BaseRule, RuleRegistry
+
+if TYPE_CHECKING:
+    from natrix.ast_node import Node
 
 
 @RuleRegistry.register
@@ -9,11 +13,15 @@ class ImplicitExportRule(BaseRule):
     """
     Implicit Export Check
 
-    Detect when the entirety of a module is being exposed using the `__interface__` expression.
+    Detect when the entirety of a module is being exposed using the
+    `__interface__` expression.
     """
 
     CODE = "NTX9"
-    MESSAGE = "Module '{}' is exposing all its functions. Consider exporting them one by one to make the contract more explicit."
+    MESSAGE = (
+        "Module '{}' is exposing all its functions. "
+        "Consider exporting them one by one to make the contract more explicit."
+    )
 
     def __init__(self) -> None:
         super().__init__(

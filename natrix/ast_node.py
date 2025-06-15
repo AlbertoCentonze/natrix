@@ -2,22 +2,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import List, Dict, Any, Optional, Set, Tuple, Union, Iterable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class Node:
-    def __init__(self, node_dict: Dict[str, Any], parent: Optional[Node] = None):
+    def __init__(self, node_dict: dict[str, Any], parent: Node | None = None):
         self.node_dict = node_dict
         self.parent = parent
-        self.children: List[Node] = []
-        self._cache_descendants: Optional[List[Node]] = None
+        self.children: list[Node] = []
+        self._cache_descendants: list[Node] | None = None
 
         self._build_children()
 
     @classmethod
-    def from_dict(
-        cls, node_dict: Dict[str, Any], parent: Optional[Node] = None
-    ) -> Node:
+    def from_dict(cls, node_dict: dict[str, Any], parent: Node | None = None) -> Node:
         """
         Factory method that decides which subclass to instantiate
         based on the AST node type.
@@ -28,7 +29,7 @@ class Node:
         return cls(node_dict, parent=parent)
 
     def _build_children(self) -> None:
-        for key, value in self.node_dict.items():
+        for _, value in self.node_dict.items():
             if isinstance(value, dict) and "ast_type" in value:
                 child_node = Node.from_dict(value, parent=self)
                 self.children.append(child_node)
@@ -39,7 +40,7 @@ class Node:
                         self.children.append(child_node)
 
     @cached_property
-    def ast_type(self) -> Optional[str]:
+    def ast_type(self) -> str | None:
         value = self.get("ast_type")
         return value if isinstance(value, str) else None
 
@@ -57,8 +58,8 @@ class Node:
                 return f"<Node {self.ast_type}>"
 
     def get_ancestor(
-        self, node_type: Optional[Union[str, Tuple[str, ...]]] = None
-    ) -> Optional[Node]:
+        self, node_type: str | tuple[str, ...] | None = None
+    ) -> Node | None:
         """
         Return an ancestor node for this node.
         If `node_type` is given, finds the first ancestor whose `ast_type`
@@ -77,10 +78,10 @@ class Node:
 
     def get_children(
         self,
-        node_type: Optional[Union[str, Tuple[str, ...]]] = None,
-        filters: Optional[Dict[str, Any]] = None,
+        node_type: str | tuple[str, ...] | None = None,
+        filters: dict[str, Any] | None = None,
         reverse: bool = False,
-    ) -> List[Node]:
+    ) -> list[Node]:
         """
         Return immediate children matching the given type/filters.
         """
@@ -88,11 +89,11 @@ class Node:
 
     def get_descendants(
         self,
-        node_type: Optional[Union[str, Tuple[str, ...]]] = None,
-        filters: Optional[Dict[str, Any]] = None,
+        node_type: str | tuple[str, ...] | None = None,
+        filters: dict[str, Any] | None = None,
         include_self: bool = False,
         reverse: bool = False,
-    ) -> List[Node]:
+    ) -> list[Node]:
         """
         Return all descendants matching the given type/filters.
 
@@ -101,7 +102,7 @@ class Node:
         ret = self._get_descendants(include_self)
         return _apply_filters(ret, node_type, filters, reverse)
 
-    def _get_descendants(self, include_self: bool = True) -> List[Node]:
+    def _get_descendants(self, include_self: bool = True) -> list[Node]:
         if self._cache_descendants is None:
             nodes = []
             if include_self:
@@ -139,7 +140,7 @@ class Node:
         return module_node
 
     @cached_property
-    def immutable_vars(self) -> Set[str]:
+    def immutable_vars(self) -> set[str]:
         """
         Get all immutable variables from the module.
 
@@ -183,11 +184,13 @@ class FunctionDefNode(Node):
         return (self.parent is not None) and (self.parent.ast_type == "InterfaceDef")
 
     @cached_property
-    def modifiers(self) -> List[str]:
+    def modifiers(self) -> list[str]:
         """
-        Return a list of Vyper decorators (e.g. "view", "pure", "external") found on this function.
+        Return a list of Vyper decorators (e.g. "view", "pure", "external")
+        found on this function.
         """
-        # The compiler attaches them in the "decorator_list" as an array of e.g. {'id': 'view'}
+        # The compiler attaches them in the "decorator_list" as an array
+        # of e.g. {'id': 'view'}
         return [
             decorator["id"]
             for decorator in self.get("decorator_list", default=[])
@@ -215,7 +218,7 @@ class FunctionDefNode(Node):
         )
 
     @cached_property
-    def memory_accesses(self) -> List[MemoryAccess]:
+    def memory_accesses(self) -> list[MemoryAccess]:
         """
         Returns all read/write accesses inside this function by scanning for
         variable_reads/variable_writes in nodes.
@@ -229,7 +232,7 @@ class FunctionDefNode(Node):
         if not all_nodes:
             return []
 
-        accesses: List[MemoryAccess] = []
+        accesses: list[MemoryAccess] = []
 
         for node in all_nodes:
             for access_type in ("variable_reads", "variable_writes"):
@@ -252,16 +255,15 @@ class FunctionDefNode(Node):
 
 def _apply_filters(
     iterable: Iterable[Node],
-    node_type: Optional[Union[str, Tuple[str, ...]]] = None,
-    filters: Optional[Dict[str, Any]] = None,
+    node_type: str | tuple[str, ...] | None = None,
+    filters: dict[str, Any] | None = None,
     reverse: bool = False,
-) -> List[Node]:
+) -> list[Node]:
     """
     Generic filtering utility for Node lists.
     """
-    if node_type is not None:
-        if isinstance(node_type, str):
-            node_type = (node_type,)
+    if node_type is not None and isinstance(node_type, str):
+        node_type = (node_type,)
 
     results = []
     for node in iterable:

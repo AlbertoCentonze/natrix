@@ -1,9 +1,10 @@
 import pytest
+
 from natrix import parse_file
 from natrix.rules.modifiers_ordering import ModifiersOrderingRule
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_modifiers_ordering_contract():
     return parse_file("tests/contracts/test_modifiers_ordering.vy")
 
@@ -30,9 +31,9 @@ def test_modifiers_ordering(test_modifiers_ordering_contract):
     ]
 
     for func_name in incorrect_functions:
-        assert any(
-            func_name in msg for msg in issue_messages
-        ), f"Expected issue for {func_name}"
+        assert any(func_name in msg for msg in issue_messages), (
+            f"Expected issue for {func_name}"
+        )
 
     # Verify the issue details for one specific case
     view_external_issue = next(

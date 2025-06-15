@@ -1,7 +1,7 @@
-import subprocess
 import re
+import subprocess
 
-from natrix.ast_tools import VYPER_VERSION, vyper_compile, parse_file, parse_source
+from natrix.ast_tools import VYPER_VERSION, parse_file, parse_source, vyper_compile
 
 
 def test_vyper_compile_integration():
@@ -11,9 +11,9 @@ def test_vyper_compile_integration():
     version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
     assert version_match, "Could not determine Vyper version"
     version = version_match.group(1)
-    assert (
-        version == VYPER_VERSION
-    ), f"Vyper version must be {VYPER_VERSION}, found {version}"
+    assert version == VYPER_VERSION, (
+        f"Vyper version must be {VYPER_VERSION}, found {version}"
+    )
 
     test_file = "tests/contracts/version_dummy.vy"
 
@@ -79,6 +79,6 @@ def get_counter() -> uint256:
 
     # Check that we have our two functions
     functions = result["metadata"]["function_info"]
-    function_names = [name.split()[0] for name in functions.keys()]
+    function_names = [name.split()[0] for name in functions]
     assert "increment" in function_names
     assert "get_counter" in function_names

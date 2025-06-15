@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from natrix.ast_node import FunctionDefNode
+from typing import TYPE_CHECKING
+
 from natrix.rules.common import BaseRule, RuleRegistry
+
+if TYPE_CHECKING:
+    from natrix.ast_node import FunctionDefNode
 
 
 @RuleRegistry.register
@@ -9,8 +13,9 @@ class UnusedVariableRule(BaseRule):
     """
     Unused Variable Check
 
-    Detects variables that are declared (via assignments like Assign, AnnAssign, and AugAssign)
-    but never actually referenced (via Name nodes) within a function. It matches each declared
+    Detects variables that are declared (via assignments like Assign,
+    AnnAssign, and AugAssign) but never actually referenced (via Name nodes)
+    within a function. It matches each declared
     variable to its assignment node and checks if it appears in any Name node usages.
 
     Example:
@@ -34,15 +39,16 @@ class UnusedVariableRule(BaseRule):
             node_type=("AnnAssign", "Assign", "AugAssign")
         )
 
-        # Collect the assigned variable names, excluding None, and map them to their declaration nodes
-        # For each variable, we want to keep track of its first declaration (AnnAssign) if available
+        # Collect the assigned variable names, excluding None, and map them
+        # to their declaration nodes. For each variable, we want to keep track
+        # of its first declaration (AnnAssign) if available
         assigned_var_nodes = {}
         for assign in all_assigns:
             var_name = assign.get("target.id")
-            if var_name is not None:
-                # If this is an AnnAssign (declaration) or we haven't seen this variable before, store it
-                if assign.ast_type == "AnnAssign" or var_name not in assigned_var_nodes:
-                    assigned_var_nodes[var_name] = assign
+            if var_name is not None and (
+                assign.ast_type == "AnnAssign" or var_name not in assigned_var_nodes
+            ):
+                assigned_var_nodes[var_name] = assign
 
         # Gather the node IDs for these assignments
         assigned_var_node_ids = [assign.get("target.node_id") for assign in all_assigns]

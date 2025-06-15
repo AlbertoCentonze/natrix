@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Set, Dict, List, Optional
+from typing import TYPE_CHECKING
 
-from natrix.ast_node import FunctionDefNode, MemoryAccess, Node
 from natrix.rules.common import BaseRule
 
+if TYPE_CHECKING:
+    from natrix.ast_node import FunctionDefNode, MemoryAccess, Node
 
-def analyze_access_patterns(accesses: list[MemoryAccess]) -> Set[MemoryAccess]:
+
+def analyze_access_patterns(accesses: list[MemoryAccess]) -> set[MemoryAccess]:
     # Sort accesses by the node's position in the code
     combined = sorted(
         accesses, key=lambda x: (x.node.get("lineno"), x.node.get("col_offset"))
@@ -26,9 +28,9 @@ def analyze_access_patterns(accesses: list[MemoryAccess]) -> Set[MemoryAccess]:
         filtered_combined.append(access)
 
     # Analyze read/write patterns to suggest caching
-    access_counts: Dict[str, int] = defaultdict(int)  # Tracks consecutive reads
-    last_write: Dict[str, Optional[Node]] = {}  # Tracks last write for each variable
-    suggestions: List[MemoryAccess] = []  # Collect suggestions for caching
+    access_counts: dict[str, int] = defaultdict(int)  # Tracks consecutive reads
+    last_write: dict[str, Node | None] = {}  # Tracks last write for each variable
+    suggestions: list[MemoryAccess] = []  # Collect suggestions for caching
 
     for access in filtered_combined:
         if access.type == "read":
@@ -47,15 +49,21 @@ def analyze_access_patterns(accesses: list[MemoryAccess]) -> Set[MemoryAccess]:
     return set(suggestions)
 
 
+# This rule is intentionally not registered in the RuleRegistry since it's too
+# experimental.
 class CacheStorageVariableRule(BaseRule):
     """
     Variable Caching Check
 
-    Detect when a variable is accessed multiple times in a function and suggest caching it.
+    Detect when a variable is accessed multiple times in a function and
+    suggest caching it.
     """
 
     CODE = "NTX7"
-    MESSAGE = "Storage variable '{}' is accessed multiple times; consider caching it to save gas."
+    MESSAGE = (
+        "Storage variable '{}' is accessed multiple times; "
+        "consider caching it to save gas."
+    )
 
     def __init__(self) -> None:
         super().__init__(

@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import ast
-import os
-import subprocess
 import json
 import re
-from typing import Dict, List, Any
-from natrix.ast_node import Node
+import subprocess
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from natrix.ast_node import Node
 
 # Type alias for Vyper AST
-VyperAST = Dict[str, Any]
+VyperAST = dict[str, Any]
 
 VYPER_VERSION = "0.4.2"
 
@@ -32,13 +34,14 @@ def _check_vyper_version() -> None:
         version = version_match.group(1)
         if version != VYPER_VERSION:
             raise Exception(f"Vyper version must be {VYPER_VERSION}, found {version}")
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         raise Exception(
-            f"Vyper compiler not found. Please ensure Vyper {VYPER_VERSION} is installed and available in your PATH."
-        )
+            f"Vyper compiler not found. Please ensure Vyper {VYPER_VERSION} "
+            "is installed and available in your PATH."
+        ) from e
 
 
-def _obtain_sys_path() -> List[str]:
+def _obtain_sys_path() -> list[str]:
     """
     Obtain all the system paths in which the compiler would
     normally look for modules. This allows to lint vyper files
@@ -56,12 +59,12 @@ def _obtain_sys_path() -> List[str]:
     paths = ast.literal_eval(stdout)[1:]
 
     # Remove paths that do not exist as the vyper compiler will throw an error.
-    valid_paths = [path for path in paths if os.path.exists(path)]
+    valid_paths = [path for path in paths if Path(path).exists()]
 
     return valid_paths
 
 
-def _obtain_default_paths() -> List[str]:
+def _obtain_default_paths() -> list[str]:
     """
     Obtain default paths for Vyper imports.
     Only returns paths that actually exist on the system.
@@ -75,24 +78,25 @@ def _obtain_default_paths() -> List[str]:
     # Return only existing paths
     existing_paths = []
     for path in default_paths:
-        if os.path.exists(path) and os.path.isdir(path):
+        path_obj = Path(path)
+        if path_obj.exists() and path_obj.is_dir():
             existing_paths.append(path)
 
     return existing_paths
 
 
 def vyper_compile(
-    filename: str, formatting: str, extra_paths: List[str] = []
+    filename: str, formatting: str, extra_paths: tuple[str, ...] = ()
 ) -> VyperAST:
     _check_vyper_version()
 
     # Combine all paths
-    all_paths = _obtain_sys_path() + _obtain_default_paths() + extra_paths
+    all_paths = _obtain_sys_path() + _obtain_default_paths() + list(extra_paths)
 
     # Convert to compiler flags
     path_flags = [item for p in all_paths for item in ["-p", p]]
 
-    command = ["vyper", "-f", formatting, filename] + path_flags
+    command = ["vyper", "-f", formatting, filename, *path_flags]
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -104,14 +108,15 @@ def vyper_compile(
         # Assert to help mypy understand the type
         assert isinstance(result, dict)
         return result
-    except Exception:
+    except Exception as e:
         # TODO change error level
         raise Exception(
-            f"Something went wrong when compiling the vyper file '{filename}'. The compiler returned the following error: \n {stderr}"
-        )
+            f"Something went wrong when compiling the vyper file '{filename}'. "
+            f"The compiler returned the following error: \n {stderr}"
+        ) from e
 
 
-def parse_file(file_path: str, extra_paths: List[str] = []) -> VyperAST:
+def parse_file(file_path: str, extra_paths: tuple[str, ...] = ()) -> VyperAST:
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
 
     # Try to compile metadata, but handle InitializerException gracefully
@@ -158,7 +163,7 @@ def parse_source(source_code: str) -> VyperAST:
         return result
     finally:
         # Clean up the temporary file
-        os.unlink(temp_file_path)
+        Path(temp_file_path).unlink()
 
 
 class VyperASTVisitor:
