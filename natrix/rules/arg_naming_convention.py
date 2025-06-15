@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from natrix.ast_node import Node, FunctionDefNode
-from natrix.rules.common import BaseRule, RuleRegistry
 import re
+
+from natrix.ast_node import FunctionDefNode, Node
+from natrix.rules.common import BaseRule, RuleRegistry
 
 
 @RuleRegistry.register
@@ -10,10 +11,13 @@ class ArgNamingConventionRule(BaseRule):
     """
     Argument Naming Convention Check
 
-    Ensures that function arguments follow a specified naming convention using a regex pattern.
+    Ensures that function arguments follow a specified naming convention
+    using a regex pattern.
 
     Example:
-        def example_function(prefix_arg: uint256): # This line is correct if 'prefix_' is the required prefix.
+        def example_function(prefix_arg: uint256):
+            # This line is correct if 'prefix_' is the required prefix.
+            pass
     """
 
     CODE = "NTX11"
@@ -34,8 +38,7 @@ class ArgNamingConventionRule(BaseRule):
         for arg_info in node.get("args.args"):
             arg_node = Node(arg_info)
             arg_name = arg_node.get("arg")
-            if arg_name is not None:
-                if not self.pattern.match(arg_name):
-                    self.add_issue(
-                        arg_node, node.get("name"), arg_name, self.pattern.pattern
-                    )
+            if arg_name is not None and not self.pattern.match(arg_name):
+                self.add_issue(
+                    arg_node, node.get("name"), arg_name, self.pattern.pattern
+                )

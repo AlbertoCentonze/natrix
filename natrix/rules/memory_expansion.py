@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from natrix.ast_node import FunctionDefNode
+from typing import TYPE_CHECKING
+
 from natrix.rules.common import BaseRule, RuleRegistry
+
+if TYPE_CHECKING:
+    from natrix.ast_node import FunctionDefNode
 
 
 @RuleRegistry.register
@@ -32,7 +36,8 @@ class MemoryExpansionRule(BaseRule):
             return
 
         function_name = node.get("name")
-        # The compiler adds numbers to function names in metadata (e.g., "dispatch_fees (12)")
+        # The compiler adds numbers to function names in metadata
+        # (e.g., "dispatch_fees (12)")
         # We need to find the matching entry
         # TODO numbering is introduced in case of function names overlapping
         # across modules. We currently don't support this case.

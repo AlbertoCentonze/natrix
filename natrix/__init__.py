@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import sys
-import os
 import argparse
-import re
-from typing import Set, List, Dict, Any, Optional
 import json
+import os
+import re
+import sys
 from dataclasses import asdict
+from pathlib import Path
+from typing import Any
 
 # Import tomllib for Python 3.11+ or tomli for earlier versions
 try:
@@ -16,7 +17,7 @@ except ImportError:
 
 from natrix.__version__ import __version__
 from natrix.ast_tools import parse_file
-from natrix.rules.common import RuleRegistry, Issue
+from natrix.rules.common import Issue, RuleRegistry
 
 
 class OutputFormatter:
@@ -24,7 +25,7 @@ class OutputFormatter:
 
     def __init__(self, json_mode: bool = False):
         self.json_mode = json_mode
-        self.messages: List[str] = []  # Collect non-issue messages for JSON mode
+        self.messages: list[str] = []  # Collect non-issue messages for JSON mode
 
     def print(self, message: str) -> None:
         """Print a message (only in CLI mode)."""
@@ -34,10 +35,11 @@ class OutputFormatter:
             # In JSON mode, we might want to collect these for debugging
             self.messages.append(message)
 
-    def print_issues(self, issues: List[Issue]) -> None:
+    def print_issues(self, issues: list[Issue]) -> None:
         """Print all issues in the appropriate format."""
         if self.json_mode:
-            # Convert Issue objects to dictionaries, excluding source_code for JSON output
+            # Convert Issue objects to dictionaries,
+            # excluding source_code for JSON output
             json_issues = []
             for issue in issues:
                 issue_dict = asdict(issue)
@@ -66,9 +68,9 @@ class OutputFormatter:
 def lint_file(
     file_path: str,
     formatter: OutputFormatter,
-    disabled_rules: Optional[Set[str]] = None,
-    extra_paths: List[str] = [],
-) -> List[Issue]:
+    disabled_rules: set[str] | None = None,
+    extra_paths: tuple[str, ...] = (),
+) -> list[Issue]:
     """Lint a single Vyper file with the given rules configuration."""
     ast = parse_file(file_path, extra_paths=extra_paths)
 
@@ -78,7 +80,7 @@ def lint_file(
     # Get the rule instances (already instantiated once at startup)
     rules = RuleRegistry.get_rules()
 
-    # flatmaps the issues from all rules and filter out disabled rules
+    # Flatten the issues from all rules and filter out disabled rules
     issues = []
     for rule in rules:
         try:
@@ -89,20 +91,22 @@ def lint_file(
         except Exception as e:
             # Simple error message with suggestion to report the issue
             formatter.print(
-                f"Error running rule {rule.run}: {str(e)}. Please report this issue on GitHub."
+                f"Error running rule {rule.run}: {e!s}. "
+                "Please report this issue on GitHub."
             )
 
     return issues
 
 
-def find_vy_files(directory: str) -> List[str]:
-    # Recursively find all .vy files in the given directory, excluding specified directories
+def find_vy_files(directory: str) -> list[str]:
+    # Recursively find all .vy files in the given directory,
+    # excluding specified directories
     vy_files = []
-    for root, dirs, files in os.walk(directory):
+    for root, _, files in os.walk(directory):
         # Collect all .vy files
         for file in files:
             if file.endswith(".vy"):
-                vy_files.append(os.path.join(root, file))
+                vy_files.append(str(Path(root) / file))
 
     return vy_files
 
@@ -110,20 +114,19 @@ def find_vy_files(directory: str) -> List[str]:
 def get_project_root() -> str:
     """Get the project root directory, which contains the pyproject.toml file."""
     # First try to find it from the current working directory upwards
-    current_dir = os.path.abspath(os.getcwd())
+    current_path = Path.cwd().resolve()
 
-    while current_dir != os.path.dirname(current_dir):  # Stop at root
-        if os.path.exists(os.path.join(current_dir, "pyproject.toml")):
-            return current_dir
-        current_dir = os.path.dirname(current_dir)
+    for parent in [current_path, *current_path.parents]:
+        if (parent / "pyproject.toml").exists():
+            return str(parent)
 
     # If not found, default to the current directory
-    return os.getcwd()
+    return str(Path.cwd())
 
 
-def read_pyproject_config() -> Dict[str, Any]:
+def read_pyproject_config() -> dict[str, Any]:
     """Read configurations from pyproject.toml if it exists"""
-    config: Dict[str, Any] = {
+    config: dict[str, Any] = {
         "files": [],
         "disabled_rules": set(),
         "rule_configs": {},
@@ -133,10 +136,10 @@ def read_pyproject_config() -> Dict[str, Any]:
     try:
         # Find the project root directory
         project_root = get_project_root()
-        pyproject_path = os.path.join(project_root, "pyproject.toml")
+        pyproject_path = Path(project_root) / "pyproject.toml"
 
-        if os.path.exists(pyproject_path):
-            with open(pyproject_path, "rb") as f:
+        if pyproject_path.exists():
+            with pyproject_path.open("rb") as f:
                 pyproject = tomllib.load(f)
                 if "tool" in pyproject and "natrix" in pyproject["tool"]:
                     natrix_config = pyproject["tool"]["natrix"]
@@ -145,7 +148,7 @@ def read_pyproject_config() -> Dict[str, Any]:
                     ):
                         # Make paths relative to pyproject.toml location
                         config["files"] = [
-                            os.path.normpath(os.path.join(project_root, path))
+                            str((Path(project_root) / path).resolve())
                             for path in natrix_config["files"]
                         ]
                     if "disabled_rules" in natrix_config and isinstance(
@@ -163,7 +166,7 @@ def read_pyproject_config() -> Dict[str, Any]:
                     ):
                         # Make paths relative to pyproject.toml location
                         config["path"] = [
-                            os.path.normpath(os.path.join(project_root, path))
+                            str((Path(project_root) / path).resolve())
                             for path in natrix_config["path"]
                         ]
     except Exception as e:
@@ -178,7 +181,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "files",
         nargs="*",
-        help="Path(s) to vyper file(s) or directory/directories to lint. If not provided, all vyper files in current directory are checked.",
+        help=(
+            "Path(s) to vyper file(s) or directory/directories to lint. "
+            "If not provided, all vyper files in current directory are checked."
+        ),
     )
     parser.add_argument(
         "-v", "--version", action="store_true", help="Show version and exit."
@@ -194,7 +200,10 @@ def parse_args() -> argparse.Namespace:
         "-c",
         "--rule-config",
         action="append",
-        help="Configure rules with format 'RuleName.param=value'. Can be used multiple times. Example: ArgNamingConvention.pattern=^_",
+        help=(
+            "Configure rules with format 'RuleName.param=value'. "
+            "Can be used multiple times. Example: ArgNamingConvention.pattern=^_"
+        ),
     )
     parser.add_argument(
         "-l",
@@ -207,7 +216,10 @@ def parse_args() -> argparse.Namespace:
         "--path",
         type=str,
         nargs="+",
-        help="List of additional paths to search for imports (e.g., -p /path/to/libs /another/path).",
+        help=(
+            "List of additional paths to search for imports "
+            "(e.g., -p /path/to/libs /another/path)."
+        ),
     )
     parser.add_argument(
         "--json",
@@ -242,7 +254,7 @@ def main() -> None:
     formatter = OutputFormatter(json_mode=args.json)
 
     # Parse rule configurations from CLI
-    rule_configs: Dict[str, Dict[str, Any]] = {}
+    rule_configs: dict[str, dict[str, Any]] = {}
     if args.rule_config:
         for config_str in args.rule_config:
             try:
@@ -296,9 +308,10 @@ def main() -> None:
     if args.files:
         all_vy_files = []
         for path in args.files:
-            if os.path.isfile(path) and path.endswith(".vy"):
+            path_obj = Path(path)
+            if path_obj.is_file() and path.endswith(".vy"):
                 all_vy_files.append(path)
-            elif os.path.isdir(path):
+            elif path_obj.is_dir():
                 dir_vy_files = find_vy_files(path)
                 if not dir_vy_files:
                     formatter.print(f"No .vy files found in the directory: {path}")
@@ -312,7 +325,8 @@ def main() -> None:
             formatter.print("No valid .vy files to lint.")
             sys.exit(1)
     else:
-        # If no paths are provided, search for .vy files in the current directory recursively
+        # If no paths are provided, search for .vy files in the current
+        # directory recursively
         all_vy_files = find_vy_files(".")
 
         if not all_vy_files:
@@ -320,7 +334,7 @@ def main() -> None:
             sys.exit(1)
 
     # Collect all issues from all files
-    all_issues: List[Issue] = []
+    all_issues: list[Issue] = []
     for file in all_vy_files:
         file_issues = lint_file(
             file, formatter, disabled_rules, extra_paths=extra_paths

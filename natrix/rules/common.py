@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, List, Dict, Type, Any, Optional, Tuple
-import inspect
 import importlib
-import os
-import pkgutil
 import importlib.util
+import inspect
+import pkgutil
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from natrix.ast_node import Node
-from natrix.ast_tools import VyperASTVisitor, VyperAST
+from natrix.ast_tools import VyperAST, VyperASTVisitor
 
 
 @dataclass(frozen=True)
@@ -26,50 +29,48 @@ class Issue:
     severity: str
     code: str
     message: str
-    source_code: Optional[str] = None
-    start_position: Optional[Tuple[int, int]] = None
-    end_position: Optional[Tuple[int, int]] = None
+    source_code: str | None = None
+    start_position: tuple[int, int] | None = None
+    end_position: tuple[int, int] | None = None
 
     def cli_format(self) -> str:
         # ANSI color codes
-        RED = "\033[31m"
-        YELLOW = "\033[33m"
-        BLUE = "\033[34m"
-        CYAN = "\033[36m"
-        BOLD = "\033[1m"
-        RESET = "\033[0m"
+        red = "\033[31m"
+        yellow = "\033[33m"
+        blue = "\033[34m"
+        cyan = "\033[36m"
+        bold = "\033[1m"
+        reset = "\033[0m"
 
         # Color the severity based on its level
-        severity_color = YELLOW
-        if self.severity.lower() == "error":
-            severity_color = RED
-        elif self.severity.lower() == "important":
-            severity_color = RED
+        severity_color = yellow
+        if self.severity.lower() == "error" or self.severity.lower() == "important":
+            severity_color = red
         elif self.severity.lower() == "style":
-            severity_color = BLUE
+            severity_color = blue
 
         # Format the main error message with colors
         result = (
-            f"{BOLD}{self.file}:{self.position}{RESET} "
-            f"{severity_color}{self.severity}{RESET} "
-            f"{CYAN}{self.code}{RESET}: {self.message}"
+            f"{bold}{self.file}:{self.position}{reset} "
+            f"{severity_color}{self.severity}{reset} "
+            f"{cyan}{self.code}{reset}: {self.message}"
         )
 
         # Add the source code snippet if available
         if self.source_code:
             # Replace the arrow markers with colored ones
-            colored_source = self.source_code.replace("-> ", f"{RED}{BOLD}-> {RESET}")
+            colored_source = self.source_code.replace("-> ", f"{red}{bold}-> {reset}")
             result += f"\n\n{colored_source}\n"
 
         return result
 
 
 class RuleRegistry:
-    _rules: Dict[str, Type["BaseRule"]] = {}
-    _rule_instances: Optional[List[Rule]] = None
+    _rules: ClassVar[dict[str, type[BaseRule]]] = {}
+    _rule_instances: ClassVar[list[Rule] | None] = None
 
     @classmethod
-    def register(cls, rule_class: Type["BaseRule"]) -> Type["BaseRule"]:
+    def register(cls, rule_class: type[BaseRule]) -> type[BaseRule]:
         """Register a rule class"""
         rule_name = rule_class.__name__
         if rule_name.endswith("Rule"):
@@ -78,14 +79,14 @@ class RuleRegistry:
         return rule_class
 
     @classmethod
-    def get_rule_classes(cls) -> Dict[str, Type["BaseRule"]]:
+    def get_rule_classes(cls) -> dict[str, type[BaseRule]]:
         """Get all registered rule classes"""
         return cls._rules.copy()
 
     @classmethod
     def get_rules(
-        cls, rule_configs: Optional[Dict[str, Dict[str, Any]]] = None
-    ) -> List[Rule]:
+        cls, rule_configs: dict[str, dict[str, Any]] | None = None
+    ) -> list[Rule]:
         """
         Get or create rule instances with the given configurations.
         Rules are discovered and instantiated only once per run.
@@ -149,12 +150,12 @@ class RuleRegistry:
         base_package = importlib.import_module(package_parts[0])
         if base_package.__file__ is None:
             return
-        base_path = os.path.dirname(base_package.__file__)
-        package_path = os.path.join(base_path, *package_parts[1:])
+        base_path = Path(base_package.__file__).parent
+        package_path = base_path.joinpath(*package_parts[1:])
 
         # Find all Python modules in the package and import them
         # This will trigger any @RuleRegistry.register decorators
-        for _, module_name, is_pkg in pkgutil.iter_modules([package_path]):
+        for _, module_name, is_pkg in pkgutil.iter_modules([str(package_path)]):
             if is_pkg or module_name == "__init__" or module_name == "common":
                 continue
 
@@ -174,15 +175,15 @@ class RuleRegistry:
 
 class BaseRule(VyperASTVisitor):
     def __init__(self, severity: str, code: str, message: str):
-        self.results: List[Any] = []
+        self.results: list[Any] = []
         self.severity = severity
         self.code = code
         self.message = message
-        self.issues: List[Issue] = []
-        self.source_code: Optional[str] = None
-        self.file_path: Optional[str] = None
+        self.issues: list[Issue] = []
+        self.source_code: str | None = None
+        self.file_path: str | None = None
 
-    def run(self, compiler_output: VyperAST) -> List[Issue]:
+    def run(self, compiler_output: VyperAST) -> list[Issue]:
         self.issues = []  # reset issues for each run
         self.compiler_output = Node(compiler_output)
 
@@ -195,15 +196,15 @@ class BaseRule(VyperASTVisitor):
         self.visit(Node(compiler_output["ast"]))
         return self.issues
 
-    def _load_source_code(self) -> Optional[str]:
+    def _load_source_code(self) -> str | None:
         """Load the source code from the file path if not already loaded."""
         if (
             self.source_code is None
             and self.file_path
-            and os.path.exists(self.file_path)
+            and Path(self.file_path).exists()
         ):
             try:
-                with open(self.file_path, "r") as f:
+                with Path(self.file_path).open() as f:
                     self.source_code = f.read()
             except Exception:
                 self.source_code = None
@@ -240,7 +241,8 @@ class BaseRule(VyperASTVisitor):
                     )
                     snippet_lines.append(f"{prefix}{line_num}: {lines[i]}")
 
-                    # Add a caret pointing to the error position immediately after the error line
+                    # Add a caret pointing to the error position
+                    # immediately after the error line
                     if line == end_line and line_num == line:
                         caret_line = (
                             "   " + " " * (len(str(line)) + 2) + " " * character + "^"
@@ -250,7 +252,7 @@ class BaseRule(VyperASTVisitor):
                         snippet_lines.append(caret_line)
 
                 source_snippet = "\n".join(snippet_lines)
-            except Exception:
+            except Exception:  # noqa: S110
                 # If anything goes wrong, just don't include the source
                 pass
 

@@ -32,3 +32,57 @@ disallow_untyped_defs = true
 no_implicit_optional = true
 warn_return_any = true
 warn_unused_ignores = true
+
+[tool.ruff.lint]
+# A comprehensive set of rules for correctness, style, and modernization.
+select = [
+    "F",   # Pyflakes (error detection)
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (modernize syntax)
+    "B",   # flake8-bugbear (bug detection)
+    "SIM", # flake8-simplify (refactoring)
+    "N",   # pep8-naming (naming conventions)
+    "C4",  # flake8-comprehensions (cleaner comprehensions)
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "S",   # flake8-bandit (security)
+    "PT",  # flake8-pytest-style
+    "TC",  # flake8-type-checking
+    "RUF", # Ruff-specific rules
+]
+
+# Disable specific rules that may not be suitable for this project.
+ignore = [
+    # Allow ambiguous variable names like `e` for exceptions.
+    "E741",
+
+    # Assertion are used both in tests and code.
+    "S101",
+]
+
+# Configure specific rule sets.
+[tool.ruff.lint.pydocstyle]
+# Enforce a consistent docstring style. "google" is a good choice.
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# The `ast_tools.py` file uses subprocess to call the Vyper compiler, which is fundamental to the tool.
+"natrix/ast_tools.py" = ["S603", "S607"]
+
+# Test files need to check subprocess functionality
+"tests/test_ast_tools.py" = ["S603", "S607"]
+
+# The main CLI entry point is allowed to print to the console.
+"natrix/__init__.py" = ["T201"]
+
+# Test files are allowed to have longer lines for assertion messages
+"tests/**/*.py" = ["E501"]
+
+# Rules files use visitor pattern with PascalCase visit_* methods
+"natrix/rules/*.py" = ["N802"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true

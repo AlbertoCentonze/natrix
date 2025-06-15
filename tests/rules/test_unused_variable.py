@@ -27,9 +27,9 @@ def test_unused_variable(uncached_contract):
 
     # Check that the issues are for the expected variables
     assert hey_unused_var_issue is not None, "No issue found for 'hey_unused_var'"
-    assert (
-        another_unused_var_issue is not None
-    ), "No issue found for 'another_unused_var'"
+    assert another_unused_var_issue is not None, (
+        "No issue found for 'another_unused_var'"
+    )
 
     # Check the positions - these should be the declaration positions, not the reassignment positions
     assert hey_unused_var_issue.position == "11:4"
@@ -61,13 +61,13 @@ def test_for_loop_underscore(for_loop_underscore_contract):
     underscore_issue = None
 
     for issue in issues:
-        if "Variable 'i' is declared but never used." == issue.message:
+        if issue.message == "Variable 'i' is declared but never used.":
             i_issue = issue
-        elif "Variable 'x' is declared but never used." == issue.message:
+        elif issue.message == "Variable 'x' is declared but never used.":
             x_issue = issue
-        elif "Variable 'unused_var' is declared but never used." == issue.message:
+        elif issue.message == "Variable 'unused_var' is declared but never used.":
             unused_var_issue = issue
-        elif "Variable '_' is declared but never used." == issue.message:
+        elif issue.message == "Variable '_' is declared but never used.":
             underscore_issue = issue
 
     # Check that the issues are for the expected variables

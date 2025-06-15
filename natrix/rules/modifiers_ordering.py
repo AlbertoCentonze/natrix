@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from natrix.ast_node import FunctionDefNode
+from typing import TYPE_CHECKING
+
 from natrix.rules.common import BaseRule, RuleRegistry
+
+if TYPE_CHECKING:
+    from natrix.ast_node import FunctionDefNode
 
 
 @RuleRegistry.register
@@ -14,15 +18,20 @@ class ModifiersOrderingRule(BaseRule):
     """
 
     CODE = "NTX12"
-    MESSAGE = "Function '{}' has modifiers in incorrect order. Expected order: visibility (@external/@internal/@deploy), mutability (@pure/@view/@nonpayable/@payable), security (@nonreentrant). Found: {}"
+    MESSAGE = (
+        "Function '{}' has modifiers in incorrect order. "
+        "Expected order: visibility (@external/@internal/@deploy), "
+        "mutability (@pure/@view/@nonpayable/@payable), "
+        "security (@nonreentrant). Found: {}"
+    )
 
     # Define the correct order of modifier categories
-    VISIBILITY_MODIFIERS = {"external", "internal", "deploy"}
-    MUTABILITY_MODIFIERS = {"pure", "view", "nonpayable", "payable"}
-    SECURITY_MODIFIERS = {"nonreentrant"}
+    VISIBILITY_MODIFIERS = frozenset({"external", "internal", "deploy"})
+    MUTABILITY_MODIFIERS = frozenset({"pure", "view", "nonpayable", "payable"})
+    SECURITY_MODIFIERS = frozenset({"nonreentrant"})
 
     # Define the expected order: visibility -> mutability -> security
-    MODIFIER_ORDER = [VISIBILITY_MODIFIERS, MUTABILITY_MODIFIERS, SECURITY_MODIFIERS]
+    MODIFIER_ORDER = (VISIBILITY_MODIFIERS, MUTABILITY_MODIFIERS, SECURITY_MODIFIERS)
 
     def __init__(self) -> None:
         super().__init__(

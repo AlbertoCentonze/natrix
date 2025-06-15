@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from natrix.ast_node import FunctionDefNode
+from typing import TYPE_CHECKING
+
 from natrix.rules.common import BaseRule, RuleRegistry
+
+if TYPE_CHECKING:
+    from natrix.ast_node import FunctionDefNode
 
 
 @RuleRegistry.register

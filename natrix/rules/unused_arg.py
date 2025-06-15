@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from natrix.ast_node import Node, FunctionDefNode
+from natrix.ast_node import FunctionDefNode, Node
 from natrix.rules.common import BaseRule, RuleRegistry
 
 
@@ -39,7 +39,8 @@ class UnusedArgRule(BaseRule):
             if arg_name is not None:
                 declared_args[arg_name] = arg_node
 
-        # Gather all 'Name' nodes to see which arguments actually appear in the function body
+        # Gather all 'Name' nodes to see which arguments actually appear
+        # in the function body
         all_names = node.get_descendants(node_type="Name")
         for name_node in all_names:
             used_name = name_node.get("id")
