@@ -17,6 +17,7 @@ except ImportError:
 
 from natrix.__version__ import __version__
 from natrix.ast_tools import parse_file
+from natrix.codegen import generate_exports
 from natrix.rules.common import Issue, RuleRegistry
 
 
@@ -178,7 +179,18 @@ def read_pyproject_config() -> dict[str, Any]:
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="A linter for Vyper Smart Contracts.")
+
+    # Add version flag at the top level
     parser.add_argument(
+        "-v", "--version", action="store_true", help="Show version and exit."
+    )
+
+    # Create subparsers
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Create the lint subcommand parser
+    lint_parser = subparsers.add_parser("lint", help="Lint Vyper files")
+    lint_parser.add_argument(
         "files",
         nargs="*",
         help=(
@@ -186,17 +198,14 @@ def parse_args() -> argparse.Namespace:
             "If not provided, all vyper files in current directory are checked."
         ),
     )
-    parser.add_argument(
-        "-v", "--version", action="store_true", help="Show version and exit."
-    )
-    parser.add_argument(
+    lint_parser.add_argument(
         "-d",
         "--disable",
         type=str,
         nargs="+",
         help="List of rule codes to disable (e.g., --disable NTX3 NTX7).",
     )
-    parser.add_argument(
+    lint_parser.add_argument(
         "-c",
         "--rule-config",
         action="append",
@@ -205,13 +214,13 @@ def parse_args() -> argparse.Namespace:
             "Can be used multiple times. Example: ArgNamingConvention.pattern=^_"
         ),
     )
-    parser.add_argument(
+    lint_parser.add_argument(
         "-l",
         "--list-rules",
         action="store_true",
         help="List all available rules with their descriptions.",
     )
-    parser.add_argument(
+    lint_parser.add_argument(
         "-p",
         "--path",
         type=str,
@@ -221,12 +230,42 @@ def parse_args() -> argparse.Namespace:
             "(e.g., -p /path/to/libs /another/path)."
         ),
     )
-    parser.add_argument(
+    lint_parser.add_argument(
         "--json",
         action="store_true",
         help="Output issues in JSON format.",
     )
-    return parser.parse_args()
+
+    # Create the codegen subcommand parser
+    codegen_parser = subparsers.add_parser("codegen", help="Code generation utilities")
+    codegen_subparsers = codegen_parser.add_subparsers(
+        dest="codegen_command", help="Code generation commands"
+    )
+
+    # Create the exports sub-subcommand
+    exports_parser = codegen_subparsers.add_parser(
+        "exports", help="Generate explicit exports for a contract"
+    )
+    exports_parser.add_argument("file_path", help="Path to the Vyper contract file")
+    exports_parser.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        nargs="+",
+        help=(
+            "List of additional paths to search for imports "
+            "(e.g., -p /path/to/libs /another/path)."
+        ),
+    )
+
+    # If no command is specified, default to lint for backward compatibility
+    args = parser.parse_args()
+    if args.command is None and not args.version:
+        # Re-parse with lint as default command
+        sys.argv.insert(1, "lint")
+        args = parser.parse_args()
+
+    return args
 
 
 def main() -> None:
@@ -237,6 +276,20 @@ def main() -> None:
         print(f"natrix v{__version__}")
         sys.exit(0)
 
+    # Handle codegen command
+    if args.command == "codegen":
+        if args.codegen_command == "exports":
+            # Get extra paths if provided
+            extra_paths = tuple(args.path) if args.path else ()
+            # Generate and print exports
+            exports = generate_exports(args.file_path, extra_paths)
+            print(exports)
+            sys.exit(0)
+        else:
+            print("Error: No codegen subcommand specified")
+            sys.exit(1)
+
+    # Handle lint command (default behavior)
     # Ensure all rules are discovered
     RuleRegistry.discover_rules()
 
