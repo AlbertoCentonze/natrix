@@ -10,9 +10,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from natrix.ast_node import Node
 
-# Type alias for Vyper AST
-VyperAST = dict[str, Any]
-
 VYPER_VERSION = "0.4.2"
 
 
@@ -87,7 +84,7 @@ def _obtain_default_paths() -> list[str]:
 
 def vyper_compile(
     filename: str, formatting: str, extra_paths: tuple[str, ...] = ()
-) -> VyperAST:
+) -> dict[str, Any] | list[dict[str, Any]]:
     _check_vyper_version()
 
     # Combine all paths
@@ -105,8 +102,8 @@ def vyper_compile(
 
     try:
         result = json.loads(stdout)
-        # Assert to help mypy understand the type
-        assert isinstance(result, dict)
+        # Assert that result is either dict or list to satisfy mypy
+        assert isinstance(result, dict | list)
         return result
     except Exception as e:
         # TODO change error level
@@ -116,13 +113,17 @@ def vyper_compile(
         ) from e
 
 
-def parse_file(file_path: str, extra_paths: tuple[str, ...] = ()) -> VyperAST:
+def parse_file(file_path: str, extra_paths: tuple[str, ...] = ()) -> dict[str, Any]:
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
+    # For annotated_ast, vyper_compile returns a dict
+    assert isinstance(ast, dict)
 
     # Try to compile metadata, but handle InitializerException gracefully
     # This happens when a module uses deferred initialization (uses: module_name)
     try:
         metadata = vyper_compile(file_path, "metadata", extra_paths=extra_paths)
+        # For metadata, vyper_compile also returns a dict
+        assert isinstance(metadata, dict)
         ast["metadata"] = metadata
     except Exception as e:
         error_str = str(e)
@@ -140,7 +141,7 @@ def parse_file(file_path: str, extra_paths: tuple[str, ...] = ()) -> VyperAST:
     return ast
 
 
-def parse_source(source_code: str) -> VyperAST:
+def parse_source(source_code: str) -> dict[str, Any]:
     """
     Parse Vyper source code directly without requiring a file path.
 

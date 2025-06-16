@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 from natrix.ast_node import Node
-from natrix.ast_tools import VyperAST, VyperASTVisitor
+from natrix.ast_tools import VyperASTVisitor
 
 
 @dataclass(frozen=True)
@@ -183,7 +183,7 @@ class BaseRule(VyperASTVisitor):
         self.source_code: str | None = None
         self.file_path: str | None = None
 
-    def run(self, compiler_output: VyperAST) -> list[Issue]:
+    def run(self, compiler_output: dict[str, Any]) -> list[Issue]:
         self.issues = []  # reset issues for each run
         self.compiler_output = Node(compiler_output)
 

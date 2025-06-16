@@ -19,8 +19,10 @@ class ImplicitExportRule(BaseRule):
 
     CODE = "NTX9"
     MESSAGE = (
-        "Module '{}' is exposing all its functions. "
-        "Consider exporting them one by one to make the contract more explicit."
+        "Module '{}' is exposing all its functions using `__interface__`. "
+        "Consider exporting them one by one to make the contract more explicit. "
+        "You can run 'natrix codegen exports path/to/{}.vy' to generate the "
+        "explicit exports."
     )
 
     def __init__(self) -> None:
@@ -36,4 +38,4 @@ class ImplicitExportRule(BaseRule):
 
         module_name = node.get("annotation.value.id")
 
-        self.add_issue(node, module_name)
+        self.add_issue(node, module_name, module_name)
