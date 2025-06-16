@@ -71,14 +71,11 @@ convention = "google"
 # The `ast_tools.py` file uses subprocess to call the Vyper compiler, which is fundamental to the tool.
 "natrix/ast_tools.py" = ["S603", "S607"]
 
-# Test files need to check subprocess functionality
-"tests/test_ast_tools.py" = ["S603", "S607"]
-
 # The main CLI entry point is allowed to print to the console.
 "natrix/__init__.py" = ["T201"]
 
-# Test files are allowed to have longer lines for assertion messages
-"tests/**/*.py" = ["E501"]
+# Test files are allowed to have longer lines for assertion messages and use subprocess
+"tests/**/*.py" = ["E501", "S603", "S607"]
 
 # Rules files use visitor pattern with PascalCase visit_* methods
 "natrix/rules/*.py" = ["N802"]
