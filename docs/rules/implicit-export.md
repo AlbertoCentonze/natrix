@@ -49,3 +49,13 @@ import erc20
 # Compliant - explicitly lists the functions to be exposed
 exports: (erc20.transfer, erc20.mint) # you can clearly tell that you are exposing a function to mint
 ```
+
+## Automatic Fix
+
+Natrix can automatically generate the explicit exports for you. Simply run:
+
+```bash
+natrix codegen exports path/to/erc20.vy
+```
+
+This will output the explicit exports declaration that you can copy into your contract.

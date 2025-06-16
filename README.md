@@ -17,13 +17,21 @@ Currently natrix requires [`uv`](https://docs.astral.sh/uv/) to be installed to 
 To check a contract:
 
 ```bash
-natrix file_to_lint.vy
+natrix lint file_to_lint.vy
 ```
 
 To check all vyper contract in the current directory:
 
 ```bash
+natrix lint
+# or simply
 natrix
+```
+
+To generate explicit exports for a contract:
+
+```bash
+natrix codegen exports path/to/contract.vy
 ```
 
 ### Command Line Options
@@ -31,10 +39,11 @@ natrix
 ```bash
 natrix --help                         # Show help message
 natrix --version                      # Show version information
-natrix --list-rules                   # List all available rules
-natrix --disable NTX1 NTX2        # Disable specific rules
-natrix --rule-config RuleName.param=value  # Configure rule parameters
-natrix -p /path/to/libs /another/path  # Add extra paths for imports
+natrix lint --list-rules               # List all available rules
+natrix lint --disable NTX1 NTX2       # Disable specific rules
+natrix lint --rule-config RuleName.param=value  # Configure rule parameters
+natrix lint -p /path/to/libs /another/path  # Add extra paths for imports
+natrix codegen exports contract.vy    # Generate explicit exports
 ```
 
 ## Configuration

@@ -32,13 +32,25 @@ You can install Natrix using various package managers:
 To analyze a Vyper contract:
 
 ```bash
+natrix lint path/to/your/contract.vy
+# or simply
 natrix path/to/your/contract.vy
 ```
 
 You can also analyze multiple files at once:
 
 ```bash
+natrix lint path/to/contracts/
+# or simply
 natrix path/to/contracts/
+```
+
+### Code Generation
+
+Natrix can also generate code snippets to help fix certain issues. For example, to generate explicit exports for a contract:
+
+```bash
+natrix codegen exports path/to/your/contract.vy
 ```
 
 ## Integration with pre-commit
