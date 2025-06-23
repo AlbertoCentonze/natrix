@@ -10,13 +10,13 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from natrix.ast_node import Node
 
-VYPER_VERSION = "0.4.2"
+SUPPORTED_VYPER_VERSION_PATTERN = re.compile(r"^0\.4\.\d+$")
 
 
 def _check_vyper_version() -> None:
     """
-    Check if vyper is installed and at the required version.
-    Raises an exception if vyper is not available or not at the correct version.
+    Check if vyper is installed and at a supported version.
+    Raises an exception if vyper is not available or not at a supported version.
     """
     try:
         result = subprocess.run(["vyper", "--version"], capture_output=True, text=True)
@@ -29,11 +29,11 @@ def _check_vyper_version() -> None:
             raise Exception("Could not determine Vyper version")
 
         version = version_match.group(1)
-        if version != VYPER_VERSION:
-            raise Exception(f"Vyper version must be {VYPER_VERSION}, found {version}")
+        if not SUPPORTED_VYPER_VERSION_PATTERN.match(version):
+            raise Exception(f"Vyper version must be >= 0.4.0, found {version}")
     except FileNotFoundError as e:
         raise Exception(
-            f"Vyper compiler not found. Please ensure Vyper {VYPER_VERSION} "
+            "Vyper compiler not found. Please ensure Vyper version >= 0.4.0 "
             "is installed and available in your PATH."
         ) from e
 
