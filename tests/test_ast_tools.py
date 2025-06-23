@@ -1,7 +1,12 @@
 import re
 import subprocess
 
-from natrix.ast_tools import VYPER_VERSION, parse_file, parse_source, vyper_compile
+from natrix.ast_tools import (
+    SUPPORTED_VYPER_VERSION_PATTERN,
+    parse_file,
+    parse_source,
+    vyper_compile,
+)
 
 
 def test_vyper_compile_integration():
@@ -11,8 +16,8 @@ def test_vyper_compile_integration():
     version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
     assert version_match, "Could not determine Vyper version"
     version = version_match.group(1)
-    assert version == VYPER_VERSION, (
-        f"Vyper version must be {VYPER_VERSION}, found {version}"
+    assert SUPPORTED_VYPER_VERSION_PATTERN.match(version), (
+        f"Vyper version must be >= 0.4.0, found {version}"
     )
 
     test_file = "tests/contracts/version_dummy.vy"
@@ -43,7 +48,7 @@ def test_parse_file_integration():
 
 
 def test_modules_compilation():
-    test_file = "tests/contracts/scrvusd_oracle.vy"
+    test_file = "tests/contracts/scrvusd_oracle/scrvusd_oracle.vy"
 
     result = vyper_compile(test_file, "annotated_ast")
     assert isinstance(result, dict)

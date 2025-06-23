@@ -1,4 +1,4 @@
-# pragma version ~=0.4
+# pragma version >=0.4.1
 
 """
 @title Time Weighted Average (TWA) Calculator

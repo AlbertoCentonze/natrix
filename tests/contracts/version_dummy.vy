@@ -1,3 +1,5 @@
+# pragma version >=0.4.1
+
 version: uint256
 
 @external

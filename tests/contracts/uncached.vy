@@ -1,3 +1,5 @@
+# pragma version >=0.4.1
+
 owner: public(immutable(address))
 a: uint256
 b: public(address)

@@ -32,8 +32,8 @@ def test_unused_variable(uncached_contract):
     )
 
     # Check the positions - these should be the declaration positions, not the reassignment positions
-    assert hey_unused_var_issue.position == "11:4"
-    assert another_unused_var_issue.position == "12:4"
+    assert hey_unused_var_issue.position == "13:4"
+    assert another_unused_var_issue.position == "14:4"
 
     # Check the messages
     assert (
