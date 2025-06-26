@@ -12,6 +12,10 @@ pip install natrix
 
 Currently natrix requires [`uv`](https://docs.astral.sh/uv/) to be installed to function correctly.
 
+### Vyper Version Compatibility
+
+Natrix supports Vyper compiler versions 0.4.0 and above.
+
 ## Usage
 
 To check a contract:
@@ -74,7 +78,7 @@ To add natrix just add the following lines to your `pre-commit-config.yaml` conf
 ```yaml
 repos:
   - repo: https://github.com/albertocentonze/natrix
-    rev: v0.1.8  # Use the latest version
+    rev: v0.1.9  # Use the latest version
     hooks:
       - id: natrix
 ```

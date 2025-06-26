@@ -6,9 +6,9 @@ def test_implicit_internal(dummy_version_contract):
 
     issues = rule.run(dummy_version_contract)
     assert len(issues) == 3
-    assert issues[0].position == "16:0"
-    assert issues[1].position == "20:0"
-    assert issues[2].position == "23:0"
+    assert issues[0].position == "18:0"
+    assert issues[1].position == "22:0"
+    assert issues[2].position == "25:0"
     assert (
         issues[0].message
         == "Internal function 'pure_internal_marked_as_nothing' is missing the '@internal' decorator."

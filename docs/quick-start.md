@@ -62,7 +62,7 @@ You can use Natrix with [pre-commit](https://pre-commit.com/) to automatically l
 ```yaml
 repos:
 - repo: https://github.com/AlbertoCentonze/natrix
-rev: v0.1.8  # Use the latest version
+rev: v0.1.9  # Use the latest version
 hooks:
     - id: natrix
 ```

@@ -11,3 +11,6 @@ wheels/
 .idea
 
 site
+.ruff_cache
+.devcontainer
+.claude

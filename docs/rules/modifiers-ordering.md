@@ -7,7 +7,7 @@
 
 ## Background
 
-Vyper allows multiple decorators on functions to specify visibility (@external, @internal, @deploy), mutability (@pure, @view, @nonpayable, @payable), and security properties (@nonreentrant). While the compiler accepts these decorators in any order, maintaining a consistent ordering improves code readability and makes the function's properties immediately clear to readers.
+Vyper allows multiple decorators on functions to specify visibility (@external, @internal, @deploy), mutability (@pure, @view, @nonpayable, @payable), and security properties (@nonreentrant, @reentrant). While the compiler accepts these decorators in any order, maintaining a consistent ordering improves code readability and makes the function's properties immediately clear to readers.
 
 ## Purpose
 

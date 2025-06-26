@@ -39,7 +39,7 @@ def unused_import_contract():
 
 @pytest.fixture
 def scrvusd_oracle_contract():
-    return output_loader("scrvusd_oracle")
+    return output_loader("scrvusd_oracle/scrvusd_oracle")
 
 
 @pytest.fixture

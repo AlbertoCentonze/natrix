@@ -1,4 +1,4 @@
-# pragma version 0.4.2
+# pragma version >=0.4.1
 """
 @title scrvUSD oracle
 @notice Oracle of scrvUSD share price for StableSwap pool and other integrations.
@@ -11,7 +11,7 @@
 
 version: public(constant(String[8])) = "0.1.0"
 
-from snekmate.auth import ownable
+from . import ownable
 
 initializes: ownable
 exports: ownable.__interface__

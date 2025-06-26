@@ -6,8 +6,8 @@ def test_print_left(uncached_contract):
 
     issues = rule.run(uncached_contract)
     assert len(issues) == 2
-    assert issues[0].position == "17:8"
-    assert issues[1].position == "20:8"
+    assert issues[0].position == "19:8"
+    assert issues[1].position == "22:8"
     assert (
         issues[0].message
         == "Found a 'print' statement; consider removing it in production code."

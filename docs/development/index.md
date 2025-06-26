@@ -15,7 +15,7 @@ Natrix uses [UV](https://docs.astral.sh/uv/) for dependency management and devel
 
 ### Vyper Compiler
 
-Natrix requires a specific version of the Vyper compiler, each release of natrix is only compatible with a specific vyper compiler version.
+Natrix supports Vyper compiler versions 0.4.0 and above.
 
 ## Creating a New Rule
 

@@ -1,6 +1,6 @@
 [project]
 name = "natrix"
-version = "0.1.8"
+version = "0.1.9"
 description = "A Vyper linter for fine sneks."
 readme = "README.md"
 authors = [{ name = "Alberto Centonze", email = "albicento.ac@gmail.com" }]
@@ -8,16 +8,14 @@ requires-python = ">=3.10"
 dependencies = ["tomli>=2.0.0; python_version < '3.11'"]
 [tool.uv]
 dev-dependencies = [
-    "pytest>=8.4.0",
-    "pytest-xdist>=3.6.1",
+    "pytest==8.4.1",
+    "pytest-xdist==3.7.0",
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.26",
-    "vyper==0.4.2",
-    "snekmate==0.1.2rc1",
     "bump2version>=1.0.1",
-    "mypy>=1.16.0",
-    "types-toml>=0.10.8.20240310",
-    "types-setuptools>=80.9.0.20250529",
+    "mypy==1.16.1",
+    "types-toml==0.10.8.20240310",
+    "types-setuptools==80.9.0.20250529",
 ]
 [project.scripts]
 natrix = "natrix.__main__:main"

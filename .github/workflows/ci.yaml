@@ -20,6 +20,7 @@ jobs:
 
   # Test runs
   tests:
+    name: Test - Python ${{ matrix.python-version }} / Vyper ${{ matrix.vyper-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -30,6 +31,10 @@ jobs:
           - "3.11.11"
           - "3.12.8"
           - "3.13.1"
+        vyper-version:
+          - "0.4.1"
+          - "0.4.2"
+          - "0.4.3"
 
     steps:
       - uses: actions/checkout@v4
@@ -51,11 +56,11 @@ jobs:
         run: uv pip install .
 
       - name: Install Vyper
-        run: uv pip install vyper==0.4.1
+        run: uv pip install vyper==${{ matrix.vyper-version }}
 
-      - name: Install snekmate
-        run: uv pip install snekmate==0.1.1rc1
+      - name: Export Vyper version to environment
+        run: echo "VYPER_VERSION=${{ matrix.vyper-version }}" >> $GITHUB_ENV
 
       # Run tests with environment variables
-      - name: Run Tests with Python ${{ matrix.python-version }}
+      - name: Run Tests with Python ${{ matrix.python-version }} and Vyper ${{ matrix.vyper-version }}
         run: uv run pytest -n=auto

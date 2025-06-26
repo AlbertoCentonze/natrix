@@ -1,4 +1,4 @@
-# pragma version 0.4.2
+# pragma version >=0.4.1
 
 """
 @title FeeSplitter
@@ -12,7 +12,7 @@ in a single transaction and distributes them according to some weights.
 from ethereum.ercs import IERC20
 from ethereum.ercs import IERC165
 
-from snekmate.auth import ownable
+from . import ownable
 initializes: ownable
 exports: (
     ownable.transfer_ownership,
