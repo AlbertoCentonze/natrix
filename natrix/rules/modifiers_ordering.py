@@ -22,13 +22,13 @@ class ModifiersOrderingRule(BaseRule):
         "Function '{}' has modifiers in incorrect order. "
         "Expected order: visibility (@external/@internal/@deploy), "
         "mutability (@pure/@view/@nonpayable/@payable), "
-        "security (@nonreentrant). Found: {}"
+        "security (@nonreentrant/@reentrant). Found: {}"
     )
 
     # Define the correct order of modifier categories
     VISIBILITY_MODIFIERS = frozenset({"external", "internal", "deploy"})
     MUTABILITY_MODIFIERS = frozenset({"pure", "view", "nonpayable", "payable"})
-    SECURITY_MODIFIERS = frozenset({"nonreentrant"})
+    SECURITY_MODIFIERS = frozenset({"nonreentrant", "reentrant"})
 
     # Define the expected order: visibility -> mutability -> security
     MODIFIER_ORDER = (VISIBILITY_MODIFIERS, MUTABILITY_MODIFIERS, SECURITY_MODIFIERS)
