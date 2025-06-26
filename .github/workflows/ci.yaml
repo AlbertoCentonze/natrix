@@ -58,6 +58,8 @@ jobs:
       - name: Install Vyper
         run: uv pip install vyper==${{ matrix.vyper-version }}
 
+      - name: Export Vyper version to environment
+        run: echo "VYPER_VERSION=${{ matrix.vyper-version }}" >> $GITHUB_ENV
 
       # Run tests with environment variables
       - name: Run Tests with Python ${{ matrix.python-version }} and Vyper ${{ matrix.vyper-version }}

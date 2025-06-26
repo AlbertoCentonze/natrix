@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 
@@ -87,3 +88,30 @@ def get_counter() -> uint256:
     function_names = [name.split()[0] for name in functions]
     assert "increment" in function_names
     assert "get_counter" in function_names
+
+
+def test_vyper_version_ci_matrix():
+    # Check if we're running in CI
+    if not os.environ.get("CI"):
+        # Not in CI, skip the check
+        return
+
+    # In CI, VYPER_VERSION MUST be set
+    expected_version = os.environ.get("VYPER_VERSION")
+    assert expected_version, (
+        "VYPER_VERSION environment variable MUST be set in CI. "
+        'The CI workflow should export it with: echo "VYPER_VERSION=${{ matrix.vyper-version }}" >> $GITHUB_ENV'
+    )
+
+    # Get the actual installed Vyper version
+    result = subprocess.run(["vyper", "--version"], capture_output=True, text=True)
+    assert result.returncode == 0, "Vyper compiler not available"
+
+    version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+    assert version_match, "Could not determine Vyper version"
+    actual_version = version_match.group(1)
+
+    # Assert that the installed version matches exactly the CI matrix version
+    assert actual_version == expected_version, (
+        f"Vyper version mismatch in CI: expected {expected_version} from matrix, but got {actual_version}"
+    )
