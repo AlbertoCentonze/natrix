@@ -60,5 +60,6 @@ nav:
     - Argument Naming Convention (NTX11): rules/argument-naming.md
     - Modifiers Ordering (NTX12): rules/modifiers-ordering.md
     - Unused Event (NTX13): rules/unused-event.md
+    - Unused Imports (NTX14): rules/unused-imports.md
   - API Reference: api/index.md
   - Development: development/index.md
