@@ -60,3 +60,8 @@ def test_unused_arg_contract():
 @pytest.fixture
 def test_unused_event_contract():
     return output_loader("test_unused_event")
+
+
+@pytest.fixture
+def test_unused_imports_contract():
+    return output_loader("test_unused_imports")
