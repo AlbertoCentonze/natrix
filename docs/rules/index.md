@@ -16,6 +16,7 @@ This section documents the available rules in Natrix.
 | [NTX10](unused-argument.md) | Unused Argument | Warning | Detects function arguments that are declared but never used |
 | [NTX11](argument-naming.md) | Argument Naming Convention | Warning | Ensures function arguments follow a specified naming convention |
 | [NTX12](modifiers-ordering.md) | Modifiers Ordering | Style | Enforces consistent ordering of function modifiers |
+| [NTX13](unused-event.md) | Unused Event | Warning | Detects events that are defined but never emitted |
 
 ## Rule Categories
 

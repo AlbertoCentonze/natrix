@@ -1,4 +1,6 @@
 - When adding or modifying a command in the CLI, the .toml config file should be updated as well.
 - Every time there is a user facing change the @docs/ should be updated according to @docs/CONTRIBUTING.md
+- Before writing tests, always consult @tests/CONTRIBUTING.md
 - When making a new rule you need to assign "NTX<seq>" code, always use the highest seq value that has yet not been used.
+- When you need to study or plan for a rule, `vyper -f annotated_ast path/to/contract.vy` can be extremely valuable to find patterns and figure out how to implement things.
 - When testing if a change to the codebase affected the CLI result you can use contracts in @tests/contracts/ instead of creating dummy one you then have to delete.
