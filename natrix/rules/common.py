@@ -193,7 +193,16 @@ class BaseRule(VyperASTVisitor):
         # The source code is loaded only once when needed
         self.source_code = None
 
+        # Call before_traversal hook if it exists
+        if hasattr(self, "before_traversal"):
+            self.before_traversal()
+
         self.visit(Node(compiler_output["ast"]))
+
+        # Call after_traversal hook if it exists
+        if hasattr(self, "after_traversal"):
+            self.after_traversal()
+
         return self.issues
 
     def _load_source_code(self) -> str | None:
