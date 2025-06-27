@@ -55,3 +55,8 @@ def for_loop_underscore_contract():
 @pytest.fixture
 def test_unused_arg_contract():
     return output_loader("test_unused_arg")
+
+
+@pytest.fixture
+def test_unused_event_contract():
+    return output_loader("test_unused_event")
