@@ -1,7 +1,8 @@
 from natrix.rules.unused_arg import UnusedArgRule
+from tests.conftest import run_rule_on_file
 
 
-def test_unused_arg(test_unused_arg_contract):
+def test_unused_arg(test_project_context):
     """
     Test that the UnusedArgRule correctly identifies unused function arguments.
 
@@ -10,7 +11,8 @@ def test_unused_arg(test_unused_arg_contract):
     2. Interface function definitions are not flagged
     """
     rule = UnusedArgRule()
-    issues = rule.run(test_unused_arg_contract)
+
+    issues = run_rule_on_file(rule, "test_unused_arg.vy", test_project_context)
 
     # Check that only the unused argument is flagged
     assert len(issues) == 1
@@ -25,14 +27,14 @@ def test_unused_arg(test_unused_arg_contract):
         assert "_arg2" not in issue.message
 
 
-def test_interface_functions_not_flagged(twocrypto_contract):
+def test_interface_functions_not_flagged(test_project_context):
     """
     Test that the UnusedArgRule does not flag interface function arguments.
 
     Uses the Twocrypto.vy contract which has interface function definitions.
     """
     rule = UnusedArgRule()
-    issues = rule.run(twocrypto_contract)
+    issues = run_rule_on_file(rule, "Twocrypto.vy", test_project_context)
 
     # Check that no interface function arguments are flagged
     for issue in issues:

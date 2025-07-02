@@ -10,8 +10,6 @@ You can install Natrix using pip:
 pip install natrix
 ```
 
-Currently natrix requires [`uv`](https://docs.astral.sh/uv/) to be installed to function correctly.
-
 ### Vyper Version Compatibility
 
 Natrix supports Vyper compiler versions 0.4.0 and above.

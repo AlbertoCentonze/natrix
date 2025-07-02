@@ -1,11 +1,15 @@
+from pathlib import Path
+
+from natrix.context import ProjectContext
 from natrix.rules.unused_imports import UnusedImportsRule
+from tests.conftest import run_rule_on_file
 
 
-def test_unused_imports(test_unused_imports_contract):
+def test_unused_imports(test_project_context):
     """Test detection of unused imports."""
     rule = UnusedImportsRule()
-    ast = test_unused_imports_contract
-    issues = rule.run(ast)
+
+    issues = run_rule_on_file(rule, "test_unused_imports.vy", test_project_context)
 
     # Should detect 3 unused imports: IERC20, IERC721, and UnusedERC165
     assert len(issues) == 3
@@ -39,11 +43,20 @@ def set_token20(addr: address):
 def set_token721(addr: address):
     self.token721 = IERC721(addr)
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedImportsRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     assert len(issues) == 0
 
@@ -64,11 +77,20 @@ my_token: Token
 def set_token(addr: address):
     self.my_token = Token(addr)
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedImportsRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     # NFT and Vault should be flagged as unused
     assert len(issues) == 2
@@ -89,11 +111,20 @@ from ethereum.ercs import IERC721
 def get_balance(token: address, account: address) -> uint256:
     return staticcall IERC20(token).balanceOf(account)
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedImportsRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     # Only IERC721 should be unused
     assert len(issues) == 1
@@ -111,11 +142,20 @@ counter: uint256
 def increment():
     self.counter += 1
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedImportsRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     assert len(issues) == 0
 
@@ -133,11 +173,20 @@ from ethereum.ercs import IERC721
 def interact_with_token(token: IERC20) -> uint256:
     return staticcall token.totalSupply()
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedImportsRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     # Only IERC721 should be unused
     assert len(issues) == 1

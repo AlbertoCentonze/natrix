@@ -1,18 +1,11 @@
-import pytest
-
-from natrix import parse_file
 from natrix.rules.modifiers_ordering import ModifiersOrderingRule
+from tests.conftest import run_rule_on_file
 
 
-@pytest.fixture
-def test_modifiers_ordering_contract():
-    return parse_file("tests/contracts/test_modifiers_ordering.vy")
-
-
-def test_modifiers_ordering(test_modifiers_ordering_contract):
+def test_modifiers_ordering(test_project_context):
     rule = ModifiersOrderingRule()
 
-    issues = rule.run(test_modifiers_ordering_contract)
+    issues = run_rule_on_file(rule, "test_modifiers_ordering.vy", test_project_context)
 
     # We expect 6 issues for the incorrect ordering examples
     assert len(issues) == 6

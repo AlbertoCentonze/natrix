@@ -5,7 +5,7 @@ from pathlib import Path
 from natrix.ast_tools import vyper_compile
 
 
-def generate_exports(file_path: str, extra_paths: tuple[str, ...]) -> str:
+def generate_exports(file_path: Path, extra_paths: tuple[Path, ...]) -> str:
     """Generate explicit exports for a Vyper contract.
 
     Args:
@@ -16,7 +16,7 @@ def generate_exports(file_path: str, extra_paths: tuple[str, ...]) -> str:
         A string containing the exports declaration
     """
     # Extract module name from file path
-    module_name = Path(file_path).stem
+    module_name = file_path.stem
 
     # Get the ABI from vyper
     abi = vyper_compile(file_path, "abi", extra_paths=extra_paths)

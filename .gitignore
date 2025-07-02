@@ -14,3 +14,5 @@ site
 .ruff_cache
 .devcontainer
 .claude
+.mypy_cache
+.pytest_cache

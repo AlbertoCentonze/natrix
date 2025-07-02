@@ -1,7 +1,8 @@
 from natrix.rules.unused_variable import UnusedVariableRule
+from tests.conftest import run_rule_on_file
 
 
-def test_unused_variable(uncached_contract):
+def test_unused_variable(test_project_context):
     """
     Test that the UnusedVariableRule correctly identifies unused variables.
 
@@ -10,7 +11,8 @@ def test_unused_variable(uncached_contract):
     and not used elsewhere in the code.
     """
     rule = UnusedVariableRule()
-    issues = rule.run(uncached_contract)
+
+    issues = run_rule_on_file(rule, "uncached.vy", test_project_context)
 
     # We should only have the two local unused variables, not the immutable 'owner'
     assert len(issues) == 2
@@ -46,10 +48,10 @@ def test_unused_variable(uncached_contract):
     )
 
 
-def test_for_loop_underscore(for_loop_underscore_contract):
+def test_for_loop_underscore(test_project_context):
     """Test that the unused variable rule ignores underscore variables in for loops."""
     rule = UnusedVariableRule()
-    issues = rule.run(for_loop_underscore_contract)
+    issues = run_rule_on_file(rule, "for_loop_underscore.vy", test_project_context)
 
     # We should have 3 issues: the unused 'i' in the for loop, the unused 'x' variable, and the unused_var
     assert len(issues) == 3
