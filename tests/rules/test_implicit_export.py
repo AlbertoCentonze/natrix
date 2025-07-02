@@ -1,10 +1,13 @@
 from natrix.rules.implicit_export import ImplicitExportRule
+from tests.conftest import run_rule_on_file
 
 
-def test_implicit_export(scrvusd_oracle_contract):
+def test_implicit_export(test_project_context):
     rule = ImplicitExportRule()
 
-    issues = rule.run(scrvusd_oracle_contract)
+    issues = run_rule_on_file(
+        rule, "scrvusd_oracle/scrvusd_oracle.vy", test_project_context
+    )
     assert len(issues) == 1
     assert issues[0].position == "17:0"
     assert issues[0].message == (

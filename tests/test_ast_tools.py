@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+from pathlib import Path
 
 from natrix.ast_tools import (
     SUPPORTED_VYPER_VERSION_PATTERN,
@@ -36,7 +37,7 @@ def test_vyper_compile_integration():
 
 
 def test_parse_file_integration():
-    test_file = "tests/contracts/version_dummy.vy"
+    test_file = Path("tests/contracts/version_dummy.vy")
 
     result = parse_file(test_file)
 
@@ -49,7 +50,7 @@ def test_parse_file_integration():
 
 
 def test_modules_compilation():
-    test_file = "tests/contracts/scrvusd_oracle/scrvusd_oracle.vy"
+    test_file = Path("tests/contracts/scrvusd_oracle/scrvusd_oracle.vy")
 
     result = vyper_compile(test_file, "annotated_ast")
     assert isinstance(result, dict)

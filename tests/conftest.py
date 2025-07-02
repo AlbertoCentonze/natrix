@@ -1,67 +1,25 @@
+from pathlib import Path
+
 import pytest
 
-from natrix import parse_file
+from natrix.context import ProjectContext
 
 
-def output_loader(contract_name):
-    return parse_file(f"tests/contracts/{contract_name}.vy")
+@pytest.fixture(scope="session")
+def test_project_context():
+    """Create a ProjectContext with all test contracts."""
+    # Find all .vy and .vyi files in tests/contracts
+    contracts_dir = Path("tests/contracts")
+    vy_files = list(contracts_dir.rglob("*.vy")) + list(contracts_dir.rglob("*.vyi"))
+
+    # Create context with all test contracts
+    return ProjectContext(vy_files)
 
 
-@pytest.fixture
-def fee_splitter_contract():
-    return output_loader("fee_splitter/FeeSplitter")
+def run_rule_on_file(rule, filename, test_project_context):
+    """Run a rule on a specific file using the test project context."""
+    # Construct the full path
+    file_path = Path("tests/contracts") / filename
 
-
-@pytest.fixture
-def dummy_version_contract():
-    return output_loader("version_dummy")
-
-
-@pytest.fixture
-def uncached_contract():
-    return output_loader("uncached")
-
-
-@pytest.fixture
-def snekmate01_ownable_contract():
-    return output_loader("ownable")
-
-
-@pytest.fixture
-def twa_contract():
-    return output_loader("TWA")
-
-
-@pytest.fixture
-def unused_import_contract():
-    return output_loader("unused_import")
-
-
-@pytest.fixture
-def scrvusd_oracle_contract():
-    return output_loader("scrvusd_oracle/scrvusd_oracle")
-
-
-@pytest.fixture
-def twocrypto_contract():
-    return output_loader("Twocrypto")
-
-
-@pytest.fixture
-def for_loop_underscore_contract():
-    return output_loader("for_loop_underscore")
-
-
-@pytest.fixture
-def test_unused_arg_contract():
-    return output_loader("test_unused_arg")
-
-
-@pytest.fixture
-def test_unused_event_contract():
-    return output_loader("test_unused_event")
-
-
-@pytest.fixture
-def test_unused_imports_contract():
-    return output_loader("test_unused_imports")
+    # Run the rule on the specific file
+    return rule.run(test_project_context, file_path.resolve())

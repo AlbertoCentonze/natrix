@@ -16,9 +16,12 @@ except ImportError:
     import tomli as tomllib
 
 from natrix.__version__ import __version__
-from natrix.ast_tools import parse_file
 from natrix.codegen import generate_exports
+from natrix.context import ProjectContext
 from natrix.rules.common import Issue, RuleRegistry
+
+# Vyper file extensions
+VYPER_EXTENSIONS = (".vy", ".vyi")
 
 
 class OutputFormatter:
@@ -67,14 +70,12 @@ class OutputFormatter:
 
 
 def lint_file(
-    file_path: str,
+    file_path: Path,
+    project_context: ProjectContext,
     formatter: OutputFormatter,
     disabled_rules: set[str] | None = None,
-    extra_paths: tuple[str, ...] = (),
 ) -> list[Issue]:
-    """Lint a single Vyper file with the given rules configuration."""
-    ast = parse_file(file_path, extra_paths=extra_paths)
-
+    """Lint a single Vyper file using the pre-built project context."""
     if disabled_rules is None:
         disabled_rules = set()
 
@@ -85,7 +86,7 @@ def lint_file(
     issues = []
     for rule in rules:
         try:
-            rule_issues = rule.run(ast)
+            rule_issues = rule.run(project_context, file_path)
             issues.extend(
                 [issue for issue in rule_issues if issue.code not in disabled_rules]
             )
@@ -99,30 +100,31 @@ def lint_file(
     return issues
 
 
-def find_vy_files(directory: str) -> list[str]:
-    # Recursively find all .vy files in the given directory,
+def find_vy_files(directory: Path) -> list[Path]:
+    # Recursively find all Vyper files (.vy and .vyi) in the given directory,
     # excluding specified directories
     vy_files = []
     for root, _, files in os.walk(directory):
-        # Collect all .vy files
+        # Collect all Vyper files
         for file in files:
-            if file.endswith(".vy"):
-                vy_files.append(str(Path(root) / file))
+            file_path = Path(root) / file
+            if file_path.suffix in VYPER_EXTENSIONS:
+                vy_files.append(file_path)
 
     return vy_files
 
 
-def get_project_root() -> str:
+def get_project_root() -> Path:
     """Get the project root directory, which contains the pyproject.toml file."""
     # First try to find it from the current working directory upwards
     current_path = Path.cwd().resolve()
 
     for parent in [current_path, *current_path.parents]:
         if (parent / "pyproject.toml").exists():
-            return str(parent)
+            return parent
 
     # If not found, default to the current directory
-    return str(Path.cwd())
+    return Path.cwd()
 
 
 def read_pyproject_config() -> dict[str, Any]:
@@ -137,7 +139,7 @@ def read_pyproject_config() -> dict[str, Any]:
     try:
         # Find the project root directory
         project_root = get_project_root()
-        pyproject_path = Path(project_root) / "pyproject.toml"
+        pyproject_path = project_root / "pyproject.toml"
 
         if pyproject_path.exists():
             with pyproject_path.open("rb") as f:
@@ -149,7 +151,7 @@ def read_pyproject_config() -> dict[str, Any]:
                     ):
                         # Make paths relative to pyproject.toml location
                         config["files"] = [
-                            str((Path(project_root) / path).resolve())
+                            (project_root / path).resolve()
                             for path in natrix_config["files"]
                         ]
                     if "disabled_rules" in natrix_config and isinstance(
@@ -167,7 +169,7 @@ def read_pyproject_config() -> dict[str, Any]:
                     ):
                         # Make paths relative to pyproject.toml location
                         config["path"] = [
-                            str((Path(project_root) / path).resolve())
+                            (project_root / path).resolve()
                             for path in natrix_config["path"]
                         ]
     except Exception as e:
@@ -280,9 +282,9 @@ def main() -> None:
     if args.command == "codegen":
         if args.codegen_command == "exports":
             # Get extra paths if provided
-            extra_paths = tuple(args.path) if args.path else ()
+            extra_paths = tuple(Path(p) for p in args.path) if args.path else ()
             # Generate and print exports
-            exports = generate_exports(args.file_path, extra_paths)
+            exports = generate_exports(Path(args.file_path), extra_paths)
             print(exports)
             sys.exit(0)
         else:
@@ -361,36 +363,43 @@ def main() -> None:
     if args.files:
         all_vy_files = []
         for path in args.files:
-            path_obj = Path(path)
-            if path_obj.is_file() and path.endswith(".vy"):
+            path = Path(path)
+            if path.is_file() and path.suffix in VYPER_EXTENSIONS:
                 all_vy_files.append(path)
-            elif path_obj.is_dir():
+            elif path.is_dir():
                 dir_vy_files = find_vy_files(path)
                 if not dir_vy_files:
-                    formatter.print(f"No .vy files found in the directory: {path}")
+                    formatter.print(f"No Vyper files found in the directory: {path}")
                 all_vy_files.extend(dir_vy_files)
             else:
                 formatter.print(
-                    f"Provided path is not a valid .vy file or directory: {path}"
+                    f"Provided path is not a valid Vyper file or directory: {path}"
                 )
 
         if not all_vy_files:
-            formatter.print("No valid .vy files to lint.")
+            formatter.print("No valid Vyper files to lint.")
             sys.exit(1)
     else:
-        # If no paths are provided, search for .vy files in the current
+        # If no paths are provided, search for Vyper files in the current
         # directory recursively
-        all_vy_files = find_vy_files(".")
+        all_vy_files = find_vy_files(Path())
 
         if not all_vy_files:
-            formatter.print("No .vy files found in the current directory.")
+            formatter.print("No Vyper files found in the current directory.")
             sys.exit(1)
+
+    # Create ProjectContext with all files
+    formatter.print("Building project dependency graph...")
+    project_context = ProjectContext(
+        all_vy_files,
+        extra_paths=tuple(Path(p) if isinstance(p, str) else p for p in extra_paths),
+    )
 
     # Collect all issues from all files
     all_issues: list[Issue] = []
     for file in all_vy_files:
         file_issues = lint_file(
-            file, formatter, disabled_rules, extra_paths=extra_paths
+            Path(file).resolve(), project_context, formatter, disabled_rules
         )
         all_issues.extend(file_issues)
 

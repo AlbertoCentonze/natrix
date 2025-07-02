@@ -1,11 +1,15 @@
+from pathlib import Path
+
+from natrix.context import ProjectContext
 from natrix.rules.unused_event import UnusedEventRule
+from tests.conftest import run_rule_on_file
 
 
-def test_unused_event(test_unused_event_contract):
+def test_unused_event(test_project_context):
     """Test detection of unused events."""
     rule = UnusedEventRule()
-    ast = test_unused_event_contract
-    issues = rule.run(ast)
+
+    issues = run_rule_on_file(rule, "test_unused_event.vy", test_project_context)
 
     # Should detect 3 unused events: Approval, Mint, and Unpaused
     assert len(issues) == 3
@@ -43,11 +47,20 @@ def transfer(to: address, amount: uint256):
 def approve(spender: address, amount: uint256):
     log Approval(msg.sender, spender, amount)
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedEventRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     assert len(issues) == 0
 
@@ -71,11 +84,20 @@ def stop():
 
 # Paused is never used
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedEventRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     # Only Paused should be flagged as unused
     assert len(issues) == 1
@@ -93,10 +115,19 @@ counter: uint256
 def increment():
     self.counter += 1
 """
-    from natrix.ast_tools import parse_source
 
     rule = UnusedEventRule()
-    ast = parse_source(source)
-    issues = rule.run(ast)
+    # Create a temporary file for the source
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vy", delete=False) as f:
+        f.write(source)
+        temp_path = f.name
+
+    try:
+        context = ProjectContext([Path(temp_path)])
+        issues = rule.run(context, Path(temp_path).resolve())
+    finally:
+        Path(temp_path).unlink()
 
     assert len(issues) == 0

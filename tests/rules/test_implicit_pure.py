@@ -1,10 +1,11 @@
 from natrix.rules.implicit_pure import ImplicitPureRule
+from tests.conftest import run_rule_on_file
 
 
-def test_implicit_pure(dummy_version_contract):
+def test_implicit_pure(test_project_context):
     rule = ImplicitPureRule()
 
-    issues = rule.run(dummy_version_contract)
+    issues = run_rule_on_file(rule, "version_dummy.vy", test_project_context)
     assert len(issues) == 4
     assert issues[0].position == "11:0"
     assert issues[1].position == "15:0"

@@ -1,10 +1,11 @@
 from natrix.rules.arg_naming_convention import ArgNamingConventionRule
+from tests.conftest import run_rule_on_file
 
 
-def test_arg_naming_convention(unused_import_contract):
+def test_arg_naming_convention(test_project_context):
     rule = ArgNamingConventionRule(pattern=r"^_")
 
-    issues = rule.run(unused_import_contract)
+    issues = run_rule_on_file(rule, "unused_import.vy", test_project_context)
 
     assert len(issues) == 4
 

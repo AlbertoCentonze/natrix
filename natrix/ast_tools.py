@@ -38,7 +38,7 @@ def _check_vyper_version() -> None:
         ) from e
 
 
-def _obtain_sys_path() -> list[str]:
+def _obtain_sys_path() -> list[Path]:
     """
     Obtain all the system paths in which the compiler would
     normally look for modules. This allows to lint vyper files
@@ -55,45 +55,37 @@ def _obtain_sys_path() -> list[str]:
     # Remove the first element of the list which is an empty string.
     paths = ast.literal_eval(stdout)[1:]
 
-    # Remove paths that do not exist as the vyper compiler will throw an error.
-    valid_paths = [path for path in paths if Path(path).exists()]
-
-    return valid_paths
+    return [Path(path) for path in paths]
 
 
-def _obtain_default_paths() -> list[str]:
+def _obtain_default_paths() -> list[Path]:
     """
     Obtain default paths for Vyper imports.
-    Only returns paths that actually exist on the system.
     """
     # List of default paths to check
     default_paths = [
-        "lib/pypi",  # Default dependency folder for moccasin
+        Path("lib/pypi"),  # Default dependency folder for moccasin
         # Add more paths here in the future
     ]
 
-    # Return only existing paths
-    existing_paths = []
-    for path in default_paths:
-        path_obj = Path(path)
-        if path_obj.exists() and path_obj.is_dir():
-            existing_paths.append(path)
-
-    return existing_paths
+    return default_paths
 
 
 def vyper_compile(
-    filename: str, formatting: str, extra_paths: tuple[str, ...] = ()
+    filename: Path, formatting: str, extra_paths: tuple[Path, ...] = ()
 ) -> dict[str, Any] | list[dict[str, Any]]:
     _check_vyper_version()
 
     # Combine all paths
     all_paths = _obtain_sys_path() + _obtain_default_paths() + list(extra_paths)
 
-    # Convert to compiler flags
-    path_flags = [item for p in all_paths for item in ["-p", p]]
+    # Filter out non-existent paths as the vyper compiler will throw an error
+    valid_paths = [p for p in all_paths if p.exists()]
 
-    command = ["vyper", "-f", formatting, filename, *path_flags]
+    # Convert to compiler flags (vyper expects strings)
+    path_flags = [item for p in valid_paths for item in ["-p", str(p)]]
+
+    command = ["vyper", "-f", formatting, str(filename), *path_flags]
 
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -113,10 +105,14 @@ def vyper_compile(
         ) from e
 
 
-def parse_file(file_path: str, extra_paths: tuple[str, ...] = ()) -> dict[str, Any]:
+def parse_file(file_path: Path, extra_paths: tuple[Path, ...] = ()) -> dict[str, Any]:
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
     # For annotated_ast, vyper_compile returns a dict
     assert isinstance(ast, dict)
+
+    # For interface files (.vyi), we only compile to AST, not metadata
+    if file_path.suffix == ".vyi":
+        return ast
 
     # Try to compile metadata, but handle InitializerException gracefully
     # This happens when a module uses deferred initialization (uses: module_name)
@@ -160,7 +156,7 @@ def parse_source(source_code: str) -> dict[str, Any]:
 
     try:
         # Parse the temporary file
-        result = parse_file(temp_file_path)
+        result = parse_file(Path(temp_file_path))
         return result
     finally:
         # Clean up the temporary file

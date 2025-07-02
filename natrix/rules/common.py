@@ -14,6 +14,9 @@ if TYPE_CHECKING:
 from natrix.ast_node import Node
 from natrix.ast_tools import VyperASTVisitor
 
+if TYPE_CHECKING:
+    from natrix.context import ProjectContext
+
 
 @dataclass(frozen=True)
 class Rule:
@@ -24,7 +27,7 @@ class Rule:
 
 @dataclass(frozen=True)
 class Issue:
-    file: str
+    file: Path
     position: str
     severity: str
     code: str
@@ -181,14 +184,18 @@ class BaseRule(VyperASTVisitor):
         self.message = message
         self.issues: list[Issue] = []
         self.source_code: str | None = None
-        self.file_path: str | None = None
+        self.file_path: Path | None = None
+        self.context: ProjectContext | None = None
 
-    def run(self, compiler_output: dict[str, Any]) -> list[Issue]:
+    def run(self, project_context: ProjectContext, file_path: Path) -> list[Issue]:
         self.issues = []  # reset issues for each run
-        self.compiler_output = Node(compiler_output)
+        self.context = project_context
+        self.file_path = file_path
 
-        # Get the file path from the compiler output
-        self.file_path = self.compiler_output.get("contract_name")
+        # Get the module info from the context
+        module_info = self.context.get_module(file_path)
+
+        self.compiler_output = Node(module_info.compiler_output)
 
         # The source code is loaded only once when needed
         self.source_code = None
@@ -197,7 +204,7 @@ class BaseRule(VyperASTVisitor):
         if hasattr(self, "before_traversal"):
             self.before_traversal()
 
-        self.visit(Node(compiler_output["ast"]))
+        self.visit(module_info.ast_node)
 
         # Call after_traversal hook if it exists
         if hasattr(self, "after_traversal"):
@@ -207,13 +214,9 @@ class BaseRule(VyperASTVisitor):
 
     def _load_source_code(self) -> str | None:
         """Load the source code from the file path if not already loaded."""
-        if (
-            self.source_code is None
-            and self.file_path
-            and Path(self.file_path).exists()
-        ):
+        if self.source_code is None and self.file_path and self.file_path.exists():
             try:
-                with Path(self.file_path).open() as f:
+                with self.file_path.open() as f:
                     self.source_code = f.read()
             except Exception:
                 self.source_code = None
@@ -266,7 +269,7 @@ class BaseRule(VyperASTVisitor):
                 pass
 
         issue = Issue(
-            file=self.file_path or "<unknown>",
+            file=self.file_path or Path("<unknown>"),
             position=position,
             severity=self.severity,
             code=self.code,

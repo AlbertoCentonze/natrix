@@ -147,6 +147,29 @@ for access in func_node.memory_accesses:
     print(f"{access.type}: {access.var}")  # "read: balance"
 ```
 
+## Project Context API
+
+The `ProjectContext` class manages the dependency graph and compilation of all modules in a project:
+
+```python
+from pathlib import Path
+from natrix.context import ProjectContext
+
+# Create context with all project files
+vy_files = [Path("contract1.vy"), Path("contract2.vy")]
+context = ProjectContext(vy_files, extra_paths=(Path("lib"),))
+
+# Get module information
+module = context.get_module(Path("contract1.vy"))
+if module:
+    print(f"Dependencies: {module.dependencies}")
+    print(f"Dependents: {module.dependents}")
+
+# Get dependency relationships
+deps = context.get_dependencies_of(Path("contract1.vy"))
+dependents = context.get_dependents_of(Path("contract1.vy"))
+```
+
 ## Rule Development API
 
 ### Base Rule Class
@@ -226,15 +249,17 @@ class MyRule(BaseRule):
 Utilities for working with Vyper compilation:
 
 ```python
+from pathlib import Path
 from natrix.ast_tools import parse_file, vyper_compile, VyperASTVisitor
+from natrix.ast_node import Node
 
 # Parse a Vyper file to AST
-ast_data = parse_file("contract.vy")
-root_node = Node(ast_data)
+ast_data = parse_file(Path("contract.vy"))
+root_node = Node(ast_data["ast"])
 
 # Compile with specific format
-ast_only = vyper_compile("contract.vy", "annotated_ast")
-metadata = vyper_compile("contract.vy", "metadata")
+ast_only = vyper_compile(Path("contract.vy"), "annotated_ast")
+metadata = vyper_compile(Path("contract.vy"), "metadata")
 ```
 
 ### VyperASTVisitor
@@ -321,6 +346,8 @@ class FunctionNamingRule(BaseRule):
 
 ```python
 import pytest
+from pathlib import Path
+from natrix.context import ProjectContext
 from natrix.ast_tools import parse_file
 from natrix.ast_node import Node
 
@@ -337,12 +364,14 @@ def good_function_name():  # Should pass
 """
 
     # Parse and test
-    with open("test.vy", "w") as f:
+    test_path = Path("test.vy")
+    with open(test_path, "w") as f:
         f.write(test_contract)
 
-    ast_data = parse_file("test.vy")
+    # Create context and run rule
+    context = ProjectContext([test_path])
     rule = FunctionNamingRule()
-    issues = rule.run(ast_data)
+    issues = rule.run(context, test_path)
 
     assert len(issues) == 1
     assert "badFunctionName" in issues[0].message
