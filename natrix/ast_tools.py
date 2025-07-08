@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import ast
+import io
 import json
 import re
 import subprocess
+import tokenize
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -11,6 +13,30 @@ if TYPE_CHECKING:
     from natrix.ast_node import Node
 
 SUPPORTED_VYPER_VERSION_PATTERN = re.compile(r"^0\.4\.\d+$")
+
+
+def _parse_comments(file_path: Path) -> list[dict[str, Any]]:
+    """Parse comments from Vyper source code file."""
+    comments = []
+    with file_path.open("r", encoding="utf-8") as f:
+        source_code = f.read()
+    g = io.StringIO(source_code).readline
+    for tok in tokenize.generate_tokens(g):
+        if tok.type == tokenize.COMMENT:
+            start_line, start_col = tok.start
+            end_line, end_col = tok.end
+            content = tok.string[1:].strip()
+            comments.append(
+                {
+                    "lineno": start_line,
+                    "col_offset": start_col,
+                    "end_lineno": end_line,
+                    "end_col_offset": end_col,
+                    "content": content,
+                    "ast_type": "Comment",
+                }
+            )
+    return comments
 
 
 def _check_vyper_version() -> None:
@@ -109,6 +135,8 @@ def parse_file(file_path: Path, extra_paths: tuple[Path, ...] = ()) -> dict[str,
     ast = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
     # For annotated_ast, vyper_compile returns a dict
     assert isinstance(ast, dict)
+
+    ast["comments"] = _parse_comments(file_path)
 
     # For interface files (.vyi), we only compile to AST, not metadata
     if file_path.suffix == ".vyi":
