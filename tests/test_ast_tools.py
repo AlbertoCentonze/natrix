@@ -5,6 +5,7 @@ from pathlib import Path
 
 from natrix.ast_tools import (
     SUPPORTED_VYPER_VERSION_PATTERN,
+    _parse_comments,
     parse_file,
     parse_source,
     vyper_compile,
@@ -116,3 +117,28 @@ def test_vyper_version_ci_matrix():
     assert actual_version == expected_version, (
         f"Vyper version mismatch in CI: expected {expected_version} from matrix, but got {actual_version}"
     )
+
+
+def test_comment_parser_all_contracts():
+    # Test that the comment parser can parse all contracts without errors
+    contracts_dir = Path("tests/contracts")
+
+    # Get all .vy files
+    vy_files = list(contracts_dir.rglob("*.vy"))
+    assert len(vy_files) > 0
+
+    for vy_file in vy_files:
+        # Parse comments should not raise any exceptions
+        comments = _parse_comments(vy_file)
+
+        # Comments should be a list (can be empty)
+        assert isinstance(comments, list)
+
+        # Each comment should have the required fields
+        for comment in comments:
+            assert comment["ast_type"] == "Comment"
+            assert isinstance(comment["lineno"], int)
+            assert isinstance(comment["col_offset"], int)
+            assert isinstance(comment["end_lineno"], int)
+            assert isinstance(comment["end_col_offset"], int)
+            assert isinstance(comment["content"], str)
