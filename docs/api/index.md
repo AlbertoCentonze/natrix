@@ -147,6 +147,53 @@ for access in func_node.memory_accesses:
     print(f"{access.type}: {access.var}")  # "read: balance"
 ```
 
+#### `called_functions: List[str]`
+Get all functions called by this function:
+
+```python
+# Returns list of function names, including external calls
+calls = func_node.called_functions
+# Example: ["_debt", "AMM.withdraw", "transferFrom"]
+
+# Deduplicated - each function appears only once
+```
+
+## ModuleNode API
+
+Specialized subclass for module (top-level) nodes with call graph functionality:
+
+```python
+from natrix.ast_node import ModuleNode
+
+# The root node from parsing is automatically a ModuleNode
+if isinstance(root, ModuleNode):
+    functions = root.functions
+    call_graph = root.call_graph
+```
+
+### Properties
+
+#### `functions: List[FunctionDefNode]`
+Get all function definitions in the module:
+
+```python
+# Returns all FunctionDef nodes as FunctionDefNode instances
+for func in module.functions:
+    print(f"Function: {func.get('name')}")
+```
+
+#### `call_graph: Dict[str, List[str]]`
+Get the complete call graph for the module:
+
+```python
+# Returns a dictionary mapping function names to their called functions
+graph = module.call_graph
+# Example: {"repay": ["_debt", "AMM.withdraw"], "_debt": ["AMM.get_rate_mul"]}
+
+# Use for analysis or visualization
+for func, calls in graph.items():
+    print(f"{func} calls: {', '.join(calls)}")
+
 ## Project Context API
 
 The `ProjectContext` class manages the dependency graph and compilation of all modules in a project:
@@ -242,6 +289,36 @@ RuleRegistry.register(MyRule)
 @RuleRegistry.register  # Recommended approach
 class MyRule(BaseRule):
     pass
+```
+
+## Code Generation API
+
+Utilities for generating code from Vyper contracts:
+
+```python
+from pathlib import Path
+from natrix.codegen import generate_exports, generate_call_graph
+
+# Generate explicit exports for a contract
+exports = generate_exports(Path("contract.vy"), extra_paths=())
+print(exports)
+# Output:
+# # NOTE: Always double-check the generated exports
+# exports: (
+#     Contract.transfer,
+#     Contract.balanceOf
+# )
+
+# Generate call graph for entire contract
+call_graph = generate_call_graph(Path("contract.vy"), extra_paths=())
+print(call_graph)  # Mermaid diagram output
+
+# Generate call graph for specific function
+call_graph = generate_call_graph(
+    Path("contract.vy"),
+    extra_paths=(),
+    target_function="repay"
+)
 ```
 
 ## AST Tools API
