@@ -26,6 +26,8 @@ class Node:
         ast_type = node_dict.get("ast_type")
         if ast_type == "FunctionDef":
             return FunctionDefNode(node_dict, parent=parent)
+        elif ast_type == "Module":
+            return ModuleNode(node_dict, parent=parent)
         return cls(node_dict, parent=parent)
 
     def _build_children(self) -> None:
@@ -168,6 +170,34 @@ class MemoryAccess:
     var: str
 
 
+class ModuleNode(Node):
+    """
+    Specialized AST Node subclass for Module nodes.
+    Contains properties for call graph generation.
+    """
+
+    @cached_property
+    def functions(self) -> list[FunctionDefNode]:
+        """
+        Returns all FunctionDef nodes in this module.
+        """
+        nodes = self.get_descendants(node_type="FunctionDef")
+        return [node for node in nodes if isinstance(node, FunctionDefNode)]
+
+    @cached_property
+    def call_graph(self) -> dict[str, list[str]]:
+        """
+        Returns a dictionary mapping function names to their called functions.
+        """
+        graph = {}
+        for func in self.functions:
+            func_name = func.get("name")
+            if func_name:
+                graph[func_name] = func.called_functions
+
+        return graph
+
+
 class FunctionDefNode(Node):
     """
     Specialized AST Node subclass for FunctionDef nodes.
@@ -223,10 +253,6 @@ class FunctionDefNode(Node):
         Returns all read/write accesses inside this function by scanning for
         variable_reads/variable_writes in nodes.
         """
-        # If the node is not actually a FunctionDef, raise:
-        if self.ast_type != "FunctionDef":
-            raise ValueError("Not a function")
-
         # Get all nodes that might have variable_reads or variable_writes
         all_nodes = self.get_descendants()
         if not all_nodes:
@@ -248,6 +274,30 @@ class FunctionDefNode(Node):
                             )
                         )
         return accesses
+
+    @cached_property
+    def called_functions(self) -> list[str]:
+        """
+        Returns a list of unique function names that this function calls.
+        """
+        # Get all Call nodes within this function
+        call_nodes = self.get_descendants(node_type="Call")
+        called_funcs = []
+
+        for call in call_nodes:
+            func_attr = call.get("func.attr")
+            if func_attr:
+                # Check if there's an object/module before the method
+                func_value_id = call.get("func.value.id")
+                if func_value_id and func_value_id != "self":
+                    # Include the object/module name (e.g., AMM.withdraw)
+                    called_funcs.append(f"{func_value_id}.{func_attr}")
+                else:
+                    # Just the function name for self calls
+                    called_funcs.append(func_attr)
+
+        # Return unique calls to avoid duplicate edges
+        return list(dict.fromkeys(called_funcs))
 
     def __repr__(self) -> str:
         return f"<FunctionDef {self.get('name')}>"

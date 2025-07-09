@@ -16,7 +16,7 @@ except ImportError:
     import tomli as tomllib
 
 from natrix.__version__ import __version__
-from natrix.codegen import generate_exports
+from natrix.codegen import generate_call_graph, generate_exports
 from natrix.context import ProjectContext
 from natrix.rules.common import Issue, RuleRegistry
 
@@ -260,6 +260,25 @@ def parse_args() -> argparse.Namespace:
         ),
     )
 
+    # Create the call_graph sub-subcommand
+    call_graph_parser = codegen_subparsers.add_parser(
+        "call_graph", help="Generate a Mermaid call graph for a contract"
+    )
+    call_graph_parser.add_argument(
+        "file_path",
+        help="Path to the Vyper contract file, optionally with :function_name suffix",
+    )
+    call_graph_parser.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        nargs="+",
+        help=(
+            "List of additional paths to search for imports "
+            "(e.g., -p /path/to/libs /another/path)."
+        ),
+    )
+
     # If no command is specified, default to lint for backward compatibility
     args = parser.parse_args()
     if args.command is None and not args.version:
@@ -286,6 +305,24 @@ def main() -> None:
             # Generate and print exports
             exports = generate_exports(Path(args.file_path), extra_paths)
             print(exports)
+            sys.exit(0)
+        elif args.codegen_command == "call_graph":
+            # Parse file path and optional function name
+            file_path_str = args.file_path
+            target_function = None
+
+            # Check if function name is specified with :function_name syntax
+            if ":" in file_path_str:
+                file_path_str, target_function = file_path_str.rsplit(":", 1)
+
+            # Get extra paths if provided
+            extra_paths = tuple(Path(p) for p in args.path) if args.path else ()
+
+            # Generate and print call graph
+            call_graph = generate_call_graph(
+                Path(file_path_str), extra_paths, target_function
+            )
+            print(call_graph)
             sys.exit(0)
         else:
             print("Error: No codegen subcommand specified")

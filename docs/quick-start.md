@@ -47,11 +47,50 @@ natrix path/to/contracts/
 
 ### Code Generation
 
-Natrix can also generate code snippets to help fix certain issues. For example, to generate explicit exports for a contract:
+Natrix includes code generation utilities to help with various tasks:
+
+#### Generate Explicit Exports
+
+Generate explicit exports for a contract to fix the implicit export warning:
 
 ```bash
 natrix codegen exports path/to/your/contract.vy
 ```
+
+#### Generate Call Graph
+
+Visualize the function call relationships in your contract using Mermaid diagrams:
+
+```bash
+# Generate call graph for entire contract
+natrix codegen call_graph path/to/your/contract.vy
+
+# Generate call graph for a specific function and its dependencies
+natrix codegen call_graph path/to/your/contract.vy:function_name
+```
+
+The call graph generator will output a Mermaid diagram that shows:
+- All functions in your contract
+- Which functions call which other functions
+- External calls to other contracts (e.g., `AMM.withdraw`)
+
+Example output:
+```mermaid
+%%{init: {
+  "flowchart": {
+    "nodeSpacing": 100,
+    "rankSpacing": 400
+  }
+}}%%
+flowchart TD
+    N0["repay"]
+    N1["_debt"]
+    N2["AMM.withdraw"]
+    N0 --> N1
+    N0 --> N2
+```
+
+You can copy this output to any Mermaid-compatible viewer to visualize your contract's structure.
 
 ## Integration with pre-commit
 
