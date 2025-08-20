@@ -27,3 +27,20 @@ def test_implicit_pure(test_project_context):
         issues[3].message
         == "Function 'pure_internal_marked_as_view' does not access state but is not marked as 'pure'."
     )
+
+
+def test_implicit_pure_with_staticcalls(test_project_context):
+    rule = ImplicitPureRule()
+
+    issues = run_rule_on_file(rule, "test_implicit_pure.vy", test_project_context)
+    assert len(issues) == 2
+    assert issues[0].position == "9:0"
+    assert issues[1].position == "14:0"
+    assert (
+        issues[0].message
+        == "Function 'get_value_pure' does not access state but is not marked as 'pure'."
+    )
+    assert (
+        issues[1].message
+        == "Function 'get_values_pure' does not access state but is not marked as 'pure'."
+    )

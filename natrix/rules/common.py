@@ -279,3 +279,57 @@ class BaseRule(VyperASTVisitor):
             end_position=(end_line, end_character),
         )
         self.issues.append(issue)
+
+
+def _get_staticcall_function_mutability(staticcall_node: Node) -> str | None:
+    """
+    Extract the mutability (pure/view) of a function being called via staticcall.
+    # TODO: does not work for imported interfaces
+    Returns:
+        "pure" if the interface function is pure
+        "view" if the interface function is view
+        None if mutability cannot be determined
+    """
+    try:
+        # The staticcall_node.node_dict contains the StaticCall structure
+        # Navigate: StaticCall -> value.func (Attribute) -> type.type_decl_node
+        value_dict = staticcall_node.node_dict.get("value", {})
+        func_dict = value_dict.get("func", {})
+
+        if not func_dict or func_dict.get("ast_type") != "Attribute":
+            return None
+
+        # Get the type information which contains the declaration node reference
+        type_info = func_dict.get("type", {})
+        type_decl_node_info = type_info.get("type_decl_node", {})
+
+        if not type_decl_node_info:
+            return None
+
+        # Find the interface function definition in the module
+        module_node = staticcall_node.module_node
+        if not module_node:
+            return None
+
+        # Search for the function definition with matching node_id
+        target_node_id = type_decl_node_info.get("node_id")
+        if target_node_id is None:
+            return None
+
+        # Search through all interface definitions
+        for interface_def in module_node.get_descendants(node_type="InterfaceDef"):
+            for func_def in interface_def.get_descendants(node_type="FunctionDef"):
+                if func_def.node_dict.get("node_id") == target_node_id:
+                    # Check the function body for mutability indicators
+                    for stmt in func_def.node_dict.get("body", []):
+                        if stmt.get("ast_type") == "Expr":
+                            value = stmt.get("value", {})
+                            if value.get("ast_type") == "Name":
+                                name_id: str = value.get("id")
+                                if name_id in ["pure", "view"]:
+                                    return name_id
+
+        return None
+    except Exception:
+        # If we can't determine mutability, err on the side of caution
+        return None

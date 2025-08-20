@@ -250,8 +250,9 @@ class FunctionDefNode(Node):
     @cached_property
     def memory_accesses(self) -> list[MemoryAccess]:
         """
-        Returns all read/write accesses inside this function by scanning for
-        variable_reads/variable_writes in nodes.
+        Returns all storage read/write accesses inside this function by scanning for
+        variable_reads/variable_writes in nodes. Excludes function arguments which
+        are read from calldata, not storage.
         """
         # Get all nodes that might have variable_reads or variable_writes
         all_nodes = self.get_descendants()
@@ -264,15 +265,24 @@ class FunctionDefNode(Node):
             for access_type in ("variable_reads", "variable_writes"):
                 if access_type in node.node_dict:
                     for item in node.get(access_type):
-                        accesses.append(
-                            MemoryAccess(
-                                node=node,
-                                type="read"
-                                if access_type == "variable_reads"
-                                else "write",
-                                var=item.get("name"),
+                        # Only include storage accesses (accessed via self.variable)
+                        # Check if this is an Attribute node where value.id is 'self'
+                        # This automatically excludes:
+                        # - Function arguments (accessed directly as Name nodes)
+                        # - Local variables (accessed directly as Name nodes)
+                        if (
+                            node.ast_type == "Attribute"
+                            and node.node_dict.get("value", {}).get("id") == "self"
+                        ):
+                            accesses.append(
+                                MemoryAccess(
+                                    node=node,
+                                    type="read"
+                                    if access_type == "variable_reads"
+                                    else "write",
+                                    var=item.get("name"),
+                                )
                             )
-                        )
         return accesses
 
     @cached_property

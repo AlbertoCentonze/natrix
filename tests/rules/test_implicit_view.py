@@ -17,3 +17,15 @@ def test_implicit_view(test_project_context):
         issues[1].message
         == "Function 'view_internal_marked_as_nothing' reads contract state but is not marked as 'view'."
     )
+
+
+def test_implicit_view_with_extcalls(test_project_context):
+    rule = ImplicitViewRule()
+
+    issues = run_rule_on_file(rule, "test_implicit_view.vy", test_project_context)
+    assert len(issues) == 1
+    assert issues[0].position == "16:0"
+    assert (
+        issues[0].message
+        == "Function 'get_supply' reads contract state but is not marked as 'view'."
+    )
