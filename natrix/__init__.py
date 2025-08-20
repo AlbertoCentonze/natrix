@@ -100,16 +100,32 @@ def lint_file(
     return issues
 
 
-def find_vy_files(directory: Path) -> list[Path]:
+def find_vy_files(directory: Path, exclude_paths: list[Path] | None = None) -> list[Path]:
     # Recursively find all Vyper files (.vy and .vyi) in the given directory,
-    # excluding specified directories
+    # excluding specified files and directories
+    if exclude_paths is None:
+        exclude_paths = []
+    
     vy_files = []
     for root, _, files in os.walk(directory):
         # Collect all Vyper files
         for file in files:
             file_path = Path(root) / file
             if file_path.suffix in VYPER_EXTENSIONS:
-                vy_files.append(file_path)
+                # Check if this file should be excluded
+                file_path_resolved = file_path.resolve()
+                should_exclude = False
+                
+                for exclude_path in exclude_paths:
+                    exclude_path_resolved = exclude_path.resolve()
+                    # Check if file matches exactly or is within an excluded directory
+                    if (file_path_resolved == exclude_path_resolved or 
+                        exclude_path_resolved in file_path_resolved.parents):
+                        should_exclude = True
+                        break
+                
+                if not should_exclude:
+                    vy_files.append(file_path)
 
     return vy_files
 
@@ -134,6 +150,7 @@ def read_pyproject_config() -> dict[str, Any]:
         "disabled_rules": set(),
         "rule_configs": {},
         "path": [],
+        "exclude": [],
     }
 
     try:
@@ -171,6 +188,13 @@ def read_pyproject_config() -> dict[str, Any]:
                         config["path"] = [
                             (project_root / path).resolve()
                             for path in natrix_config["path"]
+                        ]
+                    if "exclude" in natrix_config and isinstance(
+                        natrix_config["exclude"], list
+                    ):
+                        config["exclude"] = [
+                            (project_root / path).resolve()
+                            for path in natrix_config["exclude"]
                         ]
     except Exception as e:
         print(f"Warning: Error reading pyproject.toml: {e}")
@@ -236,6 +260,13 @@ def parse_args() -> argparse.Namespace:
         "--json",
         action="store_true",
         help="Output issues in JSON format.",
+    )
+    lint_parser.add_argument(
+        "-e",
+        "--exclude",
+        type=str,
+        nargs="+",
+        help="List of files or directories to exclude from linting (e.g., --exclude tests/ build/).",
     )
 
     # Create the codegen subcommand parser
@@ -396,6 +427,11 @@ def main() -> None:
     if args.path:
         extra_paths.extend(args.path)
 
+    # Combine exclude paths from CLI and pyproject.toml
+    exclude_paths = pyproject_config.get("exclude", [])
+    if args.exclude:
+        exclude_paths.extend([Path(p).resolve() for p in args.exclude])
+
     # Handle files
     if args.files:
         all_vy_files = []
@@ -404,7 +440,7 @@ def main() -> None:
             if path.is_file() and path.suffix in VYPER_EXTENSIONS:
                 all_vy_files.append(path)
             elif path.is_dir():
-                dir_vy_files = find_vy_files(path)
+                dir_vy_files = find_vy_files(path, exclude_paths)
                 if not dir_vy_files:
                     formatter.print(f"No Vyper files found in the directory: {path}")
                 all_vy_files.extend(dir_vy_files)
@@ -419,7 +455,7 @@ def main() -> None:
     else:
         # If no paths are provided, search for Vyper files in the current
         # directory recursively
-        all_vy_files = find_vy_files(Path())
+        all_vy_files = find_vy_files(Path(), exclude_paths)
 
         if not all_vy_files:
             formatter.print("No Vyper files found in the current directory.")

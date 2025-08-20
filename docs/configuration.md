@@ -15,6 +15,9 @@ disabled_rules = ["NTX1", "NTX2"]
 # Additional paths to search for imports
 path = ["lib", "vendor/contracts"]
 
+# Files or directories to exclude from linting
+exclude = ["build/", "tests/mocks/"]
+
 # Rule-specific configurations
 [tool.natrix.rule_configs.MemoryExpansion]
 max_frame_size = 25000
@@ -67,6 +70,32 @@ Additional paths specified here will be added to these defaults.
 This is equivalent to using the `-p` flag in the command line:
 ```bash
 natrix contract.vy -p lib vendor/contracts ../shared
+```
+
+### Excluding Files and Directories
+
+Exclude specific files or directories from linting:
+
+```toml
+[tool.natrix]
+# Exclude single directory
+exclude = ["build/"]
+
+# Exclude multiple files and directories
+exclude = ["build/", "tests/mocks/", "temp.vy"]
+
+# Relative paths are resolved relative to pyproject.toml location
+exclude = ["contracts/legacy/", "../generated/contracts/"]
+```
+
+Files and directories in the exclude list will be completely ignored during linting. This is useful for:
+- Third-party modules
+- Mock contracts from other projects
+- Deployed legacy code that should remain unchanged
+
+You can also exclude files via command line:
+```bash
+natrix --exclude build/ tests/fixtures/ temp.vy
 ```
 
 ### Disabling Rules
@@ -124,6 +153,7 @@ This outputs issues as a JSON array instead of the default colored terminal outp
     [tool.natrix]
     files = ["contracts/core/", "contracts/interfaces/", "tests/unit/"]
     path = ["lib/snekmate", "lib/vyper-utils"]
+    exclude = ["contracts/legacy/", "test/mocks/"]
     disabled_rules = ["NTX7"]
 
     [tool.natrix.rule_configs.MemoryExpansion]
