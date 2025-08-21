@@ -6,12 +6,18 @@ from natrix.ast_node import ModuleNode, Node
 from natrix.ast_tools import vyper_compile
 
 
-def generate_exports(file_path: Path, extra_paths: tuple[Path, ...]) -> str:
+def generate_exports(
+    file_path: Path,
+    extra_paths: tuple[Path, ...],
+    include_module_comments: bool = False,
+) -> str:
     """Generate explicit exports for a Vyper contract.
 
     Args:
         file_path: Path to the Vyper contract file
         extra_paths: Additional paths to search for imports
+        include_module_comments: Whether to include comments
+        showing which module functions come from
 
     Returns:
         A string containing the exports declaration
@@ -33,16 +39,76 @@ def generate_exports(file_path: Path, extra_paths: tuple[Path, ...]) -> str:
     # Convert to sorted list for deterministic output
     external_funcs_list = sorted(external_funcs)
 
+    # If module comments are requested, parse AST to get module mapping
+    func_to_module: dict[str, str] = {}
+    if include_module_comments and external_funcs_list:
+        func_to_module = _get_function_to_module_mapping(file_path, extra_paths)
+
     # Format the exports
     if external_funcs_list:
-        func_list = [f"    {module_name}.{func}" for func in external_funcs_list]
-        func_names = ",\n".join(func_list)
+        func_list = []
+        for i, func in enumerate(external_funcs_list):
+            func_line = f"    {module_name}.{func}"
+
+            # Add comma to all items except the last one
+            if i < len(external_funcs_list) - 1:
+                func_line += ","
+
+            # Add module comment if available
+            if include_module_comments and func in func_to_module:
+                func_line += f"  # {func_to_module[func]}"
+
+            func_list.append(func_line)
+
+        func_names = "\n".join(func_list)
         return (
             f"# NOTE: Always double-check the generated exports\n"
             f"exports: (\n{func_names}\n)"
         )
     else:
         return f"# No external functions found in {module_name}"
+
+
+def _get_function_to_module_mapping(
+    file_path: Path, extra_paths: tuple[Path, ...]
+) -> dict[str, str]:
+    """Parse the AST to map function names to their source modules.
+
+    Args:
+        file_path: Path to the Vyper contract file
+        extra_paths: Additional paths to search for imports
+
+    Returns:
+        A dictionary mapping function names to their source module names
+    """
+    # Get the annotated AST from vyper
+    full_dict = vyper_compile(file_path, "annotated_ast", extra_paths=extra_paths)
+    assert isinstance(full_dict, dict)
+
+    func_to_module: dict[str, str] = {}
+
+    # Extract imported modules and their function names
+    imports = full_dict.get("imports", [])
+    for import_dict in imports:
+        if "path" in import_dict and "body" in import_dict:
+            # Extract module name from path
+            import_path = import_dict["path"]
+            module_name = Path(import_path).stem
+
+            # Look through the imported module's AST body
+            # for function definitions and public variables
+            for node in import_dict["body"]:
+                if node.get("ast_type") == "FunctionDef":
+                    func_name = node.get("name")
+                    if func_name:
+                        func_to_module[func_name] = module_name
+                elif node.get("ast_type") == "VariableDecl" and node.get("is_public"):
+                    # Public variables generate getter functions
+                    var_name = node.get("target", {}).get("id")
+                    if var_name:
+                        func_to_module[var_name] = module_name
+
+    return func_to_module
 
 
 def generate_call_graph(

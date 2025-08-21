@@ -259,6 +259,11 @@ def parse_args() -> argparse.Namespace:
             "(e.g., -p /path/to/libs /another/path)."
         ),
     )
+    exports_parser.add_argument(
+        "--display-modules",
+        action="store_true",
+        help="Include comments showing which module functions come from",
+    )
 
     # Create the call_graph sub-subcommand
     call_graph_parser = codegen_subparsers.add_parser(
@@ -303,7 +308,11 @@ def main() -> None:
             # Get extra paths if provided
             extra_paths = tuple(Path(p) for p in args.path) if args.path else ()
             # Generate and print exports
-            exports = generate_exports(Path(args.file_path), extra_paths)
+            exports = generate_exports(
+                Path(args.file_path),
+                extra_paths,
+                include_module_comments=args.display_modules,
+            )
             print(exports)
             sys.exit(0)
         elif args.codegen_command == "call_graph":
